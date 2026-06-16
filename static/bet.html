@@ -124,6 +124,12 @@
   .err-msg { color: #f87171; font-size: .88rem; margin-top: 8px; display: none; }
 
   .custom-name-wrap { margin-top: 10px; display: none; }
+  .remembered-hint {
+    margin-top: 10px; font-size: .8rem; color: var(--muted);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .remembered-hint a { color: var(--accent2); text-decoration: none; font-weight: 600; }
+  .remembered-hint a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -167,7 +173,11 @@
       </select>
       <div class="custom-name-wrap" id="custom-name-wrap">
         <label for="custom-name">Your name</label>
-        <input type="text" id="custom-name" placeholder="Enter your name" maxlength="100" oninput="updatePreview()">
+        <input type="text" id="custom-name" placeholder="Enter your name" maxlength="100" oninput="onCustomNameInput()">
+      </div>
+      <div class="remembered-hint" id="remembered-hint" style="display:none">
+        <span id="remembered-text"></span>
+        <a href="#" onclick="clearBettor(); return false;">Not you? Switch</a>
       </div>
     </div>
 
@@ -295,12 +305,71 @@ function renderPage() {
     o.textContent = c.name;
     compSel.appendChild(o);
   });
+
+  // Restore the remembered bettor on this device
+  restoreBettor();
+  updatePreview();
 }
 
 function onBettorChange() {
   const val = document.getElementById('bettor-select').value;
   const wrap = document.getElementById('custom-name-wrap');
   wrap.style.display = val === '__other__' ? 'block' : 'none';
+  saveBettor();
+  updatePreview();
+}
+
+function onCustomNameInput() {
+  saveBettor();
+  updatePreview();
+}
+
+// --- Bettor memory (persists on this device) ---
+const BETTOR_KEY = 'ironman_bettor';
+
+function saveBettor() {
+  const sel = document.getElementById('bettor-select').value;
+  const custom = document.getElementById('custom-name').value.trim();
+  if (!sel) { localStorage.removeItem(BETTOR_KEY); return; }
+  try { localStorage.setItem(BETTOR_KEY, JSON.stringify({ sel, custom })); } catch (e) {}
+}
+
+function restoreBettor() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(BETTOR_KEY)); } catch (e) {}
+  const hint = document.getElementById('remembered-hint');
+  if (!saved || !saved.sel) { hint.style.display = 'none'; return; }
+
+  const sel = document.getElementById('bettor-select');
+  const optExists = [...sel.options].some(o => o.value === saved.sel);
+
+  let displayName;
+  if (saved.sel === '__other__') {
+    sel.value = '__other__';
+    document.getElementById('custom-name').value = saved.custom || '';
+    document.getElementById('custom-name-wrap').style.display = 'block';
+    displayName = saved.custom || '(unnamed)';
+  } else if (optExists) {
+    sel.value = saved.sel;
+    displayName = saved.sel;
+  } else {
+    // Saved name isn't a current dropdown option — keep it as a typed name
+    sel.value = '__other__';
+    document.getElementById('custom-name').value = saved.sel;
+    document.getElementById('custom-name-wrap').style.display = 'block';
+    displayName = saved.sel;
+  }
+
+  document.getElementById('remembered-text').textContent = `Betting as ${displayName}.`;
+  hint.style.display = 'flex';
+}
+
+function clearBettor() {
+  localStorage.removeItem(BETTOR_KEY);
+  document.getElementById('bettor-select').value = '';
+  document.getElementById('custom-name').value = '';
+  document.getElementById('custom-name-wrap').style.display = 'none';
+  document.getElementById('remembered-hint').style.display = 'none';
   updatePreview();
 }
 
@@ -390,14 +459,12 @@ async function placeBet() {
 function resetForm() {
   document.getElementById('bet-form').style.display = 'block';
   document.getElementById('confirm-screen').style.display = 'none';
-  document.getElementById('bettor-select').value = '';
+  // Keep the bettor (same person usually bets again) — only clear the bet itself
   document.getElementById('competitor-select').value = '';
   document.getElementById('amount-input').value = '';
-  document.getElementById('custom-name').value = '';
-  document.getElementById('custom-name-wrap').style.display = 'none';
   document.getElementById('preview-card').style.display = 'none';
   document.getElementById('btn-place').disabled = true;
-  loadInfo();
+  loadInfo();   // repopulates dropdowns, then restores the remembered bettor
 }
 
 function showErr(msg) {
