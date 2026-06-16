@@ -299,6 +299,10 @@ def bet_info():
 
     bettor_options = [c["name"] for c in all_competitors] + ["Organizer"]
 
+    # Per-competitor effective totals so the bet page can estimate the real
+    # "if they win" payout (winner's backers split the whole pool by effective bet).
+    eff_by_id = {o["id"]: o["effective_bet"] for o in db.get_competitor_odds()}
+
     return {
         "tournament": {
             "name": t["name"],
@@ -308,7 +312,10 @@ def bet_info():
             "betting_open": bool(t["betting_open"]),
             "winner_id": t["winner_id"],
         },
-        "active_competitors": [{"id": c["id"], "name": c["name"]} for c in active],
+        "active_competitors": [
+            {"id": c["id"], "name": c["name"], "effective_bet": eff_by_id.get(c["id"], 0.0)}
+            for c in active
+        ],
         "bettor_options": bettor_options,
         "pool": pool,
         "current_multiplier": current_multiplier,

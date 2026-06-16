@@ -657,9 +657,11 @@ function renderMarketMovement() {
       <text x="${padL-5}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="var(--muted)" font-size="11">${v.toFixed(0)}%</text>`;
   }).join('');
 
-  // X labels (round numbers)
+  // X labels (round numbers) — thin out when there are many rounds so they never crowd
   let xLabels = '';
+  const xStep = Math.ceil(maxRound / 8);
   for (let r = 1; r <= maxRound; r++) {
+    if ((r - 1) % xStep !== 0 && r !== maxRound) continue;
     xLabels += `<text x="${xAt(r).toFixed(1)}" y="${H-8}" text-anchor="middle" fill="var(--muted)" font-size="11">R${r}</text>`;
   }
 
@@ -909,14 +911,17 @@ function renderRoundActivity() {
   if (rounds.length < 2) { document.getElementById('activity-section').style.display = 'none'; return; }
 
   const maxCount = Math.max(...Object.values(byRound));
+  // With many rounds the bars get thin — only label every Nth so text never overlaps
+  const labelStep = Math.ceil(rounds.length / 9);
   document.getElementById('activity-section').style.display = 'block';
-  document.getElementById('round-bars').innerHTML = rounds.map(r => {
+  document.getElementById('round-bars').innerHTML = rounds.map((r, i) => {
     const count = byRound[r];
     const hPct = (count/maxCount*100).toFixed(0);
+    const showLabel = i % labelStep === 0 || i === rounds.length - 1;
     return `<div class="round-bar-wrap">
-      <div class="round-bar-val">${count}</div>
+      <div class="round-bar-val">${showLabel ? count : ''}</div>
       <div class="round-bar" style="height:${hPct}%"></div>
-      <div class="round-bar-label">R${r}</div>
+      <div class="round-bar-label">${showLabel ? 'R'+r : ''}</div>
     </div>`;
   }).join('');
 }

@@ -401,10 +401,13 @@ function updatePreview() {
   const compName = document.getElementById('competitor-select').options[document.getElementById('competitor-select').selectedIndex].text;
   const effective = amount * mult;
 
-  // Estimate payout: (my_effective / (total_effective + my_effective)) * (total_pool + amount)
-  const totalEff = (INFO.pool.total_effective || 0) + effective;
+  // If this competitor wins, their backers split the WHOLE pool by effective bet.
+  // So this bet's share = my effective / (that competitor's total effective, incl. this bet).
+  const comp = (INFO.active_competitors || []).find(c => String(c.id) === String(compId));
+  const compEffBefore = comp ? (comp.effective_bet || 0) : 0;
+  const compEffAfter = compEffBefore + effective;
   const totalPool = (INFO.pool.total_pool || 0) + amount;
-  const estPayout = (effective / totalEff) * totalPool;
+  const estPayout = compEffAfter > 0 ? (effective / compEffAfter) * totalPool : 0;
 
   preview.style.display = 'block';
   document.getElementById('prev-bettor').textContent = bettorName;
@@ -439,15 +442,17 @@ async function placeBet() {
   document.getElementById('conf-line1').textContent = `${d.bettor_name} bet $${d.amount.toFixed(2)} on ${d.competitor_name}`;
   document.getElementById('conf-line2').textContent = `Multiplier: ${d.multiplier}× → Effective bet: $${d.effective_bet.toFixed(2)}`;
 
-  // Compute payout estimate with updated pool
-  const updatedPool = d.total_pool;
-  // Re-fetch for accuracy
+  // "If they win" payout: this bet's share of that competitor's total effective bets,
+  // applied to the whole pool (the winner's backers split the entire pool).
   await loadInfo();
   const odds = await api('GET', '/api/status');
   if (odds.ok) {
     const comp = (odds.data.odds || []).find(o => o.name === d.competitor_name);
-    if (comp) {
-      document.getElementById('conf-payout').textContent = `Projected payout if ${d.competitor_name} wins: $${comp.projected_payout.toFixed(2)}`;
+    const pool = odds.data.pool.total_pool || d.total_pool;
+    if (comp && comp.effective_bet > 0) {
+      const payout = (d.effective_bet / comp.effective_bet) * pool;
+      document.getElementById('conf-payout').textContent =
+        `If ${d.competitor_name} wins, this bet returns ≈ $${payout.toFixed(2)}`;
     }
   }
 
