@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ironman — Place a Bet</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a24;
+    --surface2: #252535;
+    --border: #333348;
+    --accent: #e63946;
+    --accent2: #f4a261;
+    --green: #2a9d8f;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --radius: 14px;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 16px; line-height: 1.5;
+    min-height: 100dvh;
+  }
+
+  .header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .header h1 { font-size: 1.3rem; font-weight: 700; }
+  .header nav { margin-left: auto; display: flex; gap: 16px; }
+  .header nav a { color: var(--muted); text-decoration: none; font-size: .85rem; }
+
+  .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  .banner {
+    border-radius: var(--radius); padding: 14px 16px;
+    margin-bottom: 20px; font-size: .9rem;
+  }
+  .banner-open { background: #1a3a28; border: 1px solid #2a5a38; color: #4ade80; }
+  .banner-closed { background: #2a2020; border: 1px solid #4a2828; color: #f87171; }
+  .banner-over { background: #1e1a38; border: 1px solid #3a2a60; color: #a78bfa; }
+
+  .pool-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    margin-bottom: 20px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .pool-stat { flex: 1; min-width: 80px; }
+  .pool-stat .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .pool-stat .value { font-size: 1.3rem; font-weight: 700; margin-top: 2px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 6px; }
+  select, input[type=number], input[type=text] {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1.05rem;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select:focus, input:focus { border-color: var(--accent2); }
+
+  .amount-row {
+    display: flex; gap: 8px; align-items: center; margin-top: 8px;
+  }
+  .amount-row input { flex: 1; }
+  .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .qbtn {
+    padding: 8px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: .88rem; cursor: pointer;
+    flex: 1; min-width: 50px; text-align: center;
+  }
+  .qbtn:hover { border-color: var(--accent2); }
+
+  .preview-card {
+    background: #1a1a2e; border: 1.5px solid var(--accent2);
+    border-radius: var(--radius); padding: 18px;
+    margin-bottom: 20px; display: none;
+  }
+  .preview-card h2 { font-size: .85rem; font-weight: 700; color: var(--accent2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
+  .preview-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .95rem; }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-row .pkey { color: var(--muted); }
+  .preview-row .pval { font-weight: 600; }
+  .preview-row.highlight .pval { color: var(--accent2); font-size: 1.2rem; }
+
+  .btn-place {
+    width: 100%; padding: 18px; background: var(--accent); color: #fff;
+    border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 700;
+    cursor: pointer; transition: opacity .15s;
+    letter-spacing: .02em;
+  }
+  .btn-place:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-place:hover:not(:disabled) { opacity: .88; }
+
+  .confirm-screen { display: none; text-align: center; padding: 30px 0; }
+  .confirm-screen .big-check { font-size: 3.5rem; margin-bottom: 12px; }
+  .confirm-screen h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+  .confirm-screen p { color: var(--muted); margin-bottom: 6px; }
+  .confirm-screen .payout-est { font-size: 1.1rem; color: var(--accent2); font-weight: 600; margin: 12px 0; }
+  .btn-again {
+    margin-top: 24px; padding: 14px 28px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-size: 1rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-again:hover { border-color: var(--accent2); }
+
+  .err-msg { color: #f87171; font-size: .88rem; margin-top: 8px; display: none; }
+
+  .custom-name-wrap { margin-top: 10px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:1.4rem">🎯</span>
+  <h1 id="tournament-name">Ironman Betting</h1>
+  <nav>
+    <a href="/tracker">Tracker</a>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- Status banner -->
+  <div id="banner" class="banner banner-closed" style="display:none"></div>
+
+  <!-- Pool stats -->
+  <div class="pool-bar" id="pool-bar" style="display:none">
+    <div class="pool-stat">
+      <div class="label">Total Pool</div>
+      <div class="value" id="pool-total">$0</div>
+    </div>
+    <div class="pool-stat">
+      <div class="label">Round</div>
+      <div class="value" id="pool-round">—</div>
+    </div>
+    <div class="pool-stat">
+      <div class="label">Multiplier</div>
+      <div class="value" id="pool-mult">—</div>
+    </div>
+  </div>
+
+  <!-- Bet form -->
+  <div id="bet-form">
+    <div class="card">
+      <h2>Who are you?</h2>
+      <label for="bettor-select">Select your name</label>
+      <select id="bettor-select" onchange="onBettorChange()">
+        <option value="">— Choose —</option>
+      </select>
+      <div class="custom-name-wrap" id="custom-name-wrap">
+        <label for="custom-name">Your name</label>
+        <input type="text" id="custom-name" placeholder="Enter your name" maxlength="100" oninput="updatePreview()">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Who are you betting on?</h2>
+      <label for="competitor-select">Active competitors</label>
+      <select id="competitor-select" onchange="updatePreview()">
+        <option value="">— Choose —</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>How much?</h2>
+      <label for="amount-input">Amount ($1 – $500)</label>
+      <div class="amount-row">
+        <input type="number" id="amount-input" min="1" max="500" step="1" placeholder="0" oninput="updatePreview()">
+      </div>
+      <div class="quick-btns">
+        <div class="qbtn" onclick="setAmount(5)">$5</div>
+        <div class="qbtn" onclick="setAmount(10)">$10</div>
+        <div class="qbtn" onclick="setAmount(20)">$20</div>
+        <div class="qbtn" onclick="setAmount(50)">$50</div>
+        <div class="qbtn" onclick="setAmount(100)">$100</div>
+      </div>
+    </div>
+
+    <!-- Live preview -->
+    <div class="preview-card" id="preview-card">
+      <h2>Your Bet</h2>
+      <div class="preview-row"><span class="pkey">You</span><span class="pval" id="prev-bettor">—</span></div>
+      <div class="preview-row"><span class="pkey">Betting on</span><span class="pval" id="prev-competitor">—</span></div>
+      <div class="preview-row"><span class="pkey">Amount</span><span class="pval" id="prev-amount">—</span></div>
+      <div class="preview-row"><span class="pkey">Multiplier</span><span class="pval" id="prev-mult">—</span></div>
+      <div class="preview-row"><span class="pkey">Effective bet</span><span class="pval" id="prev-effective">—</span></div>
+      <div class="preview-row highlight"><span class="pkey">Est. payout if they win</span><span class="pval" id="prev-payout">—</span></div>
+    </div>
+
+    <div class="err-msg" id="err-msg"></div>
+
+    <button class="btn-place" id="btn-place" onclick="placeBet()" disabled>Place Bet</button>
+  </div>
+
+  <!-- Confirmation screen -->
+  <div class="confirm-screen" id="confirm-screen">
+    <div class="big-check">✅</div>
+    <h2>Bet placed!</h2>
+    <p id="conf-line1"></p>
+    <p id="conf-line2"></p>
+    <div class="payout-est" id="conf-payout"></div>
+    <p style="font-size:.85rem;color:var(--muted)">Payout estimate updates as more bets come in.</p>
+    <button class="btn-again" onclick="resetForm()">Place another bet</button>
+  </div>
+
+</div>
+
+<script>
+let INFO = null;
+
+async function loadInfo() {
+  const res = await api('GET', '/api/bet/info');
+  if (!res.ok) return;
+  INFO = res.data;
+  renderPage();
+}
+
+function renderPage() {
+  if (!INFO || !INFO.tournament) {
+    document.getElementById('banner').style.display = 'block';
+    document.getElementById('banner').className = 'banner banner-closed';
+    document.getElementById('banner').textContent = 'No tournament set up yet.';
+    return;
+  }
+
+  const t = INFO.tournament;
+  document.getElementById('tournament-name').textContent = t.name;
+
+  // Pool bar
+  const poolBar = document.getElementById('pool-bar');
+  poolBar.style.display = 'flex';
+  document.getElementById('pool-total').textContent = '$' + (INFO.pool.total_pool || 0).toFixed(2);
+  document.getElementById('pool-round').textContent = t.current_round > 0 ? `${t.current_round} / ${t.total_rounds}` : '—';
+  document.getElementById('pool-mult').textContent = INFO.current_multiplier ? INFO.current_multiplier + '×' : '—';
+
+  // Banner
+  const banner = document.getElementById('banner');
+  banner.style.display = 'block';
+  if (t.winner_id) {
+    banner.className = 'banner banner-over';
+    banner.textContent = 'The tournament is over. No more bets.';
+    document.getElementById('bet-form').style.display = 'none';
+    return;
+  }
+  if (t.betting_open) {
+    banner.className = 'banner banner-open';
+    banner.textContent = `🟢 Betting is OPEN — Round ${t.current_round}`;
+  } else {
+    banner.className = 'banner banner-closed';
+    banner.textContent = t.current_round > 0 ? `🔴 Betting is closed between rounds` : '🔴 Betting hasn\'t opened yet';
+  }
+
+  if (!t.betting_open) {
+    document.getElementById('btn-place').disabled = true;
+  }
+
+  // Populate bettor dropdown
+  const bettorSel = document.getElementById('bettor-select');
+  bettorSel.innerHTML = '<option value="">— Choose —</option>';
+  (INFO.bettor_options || []).forEach(name => {
+    const o = document.createElement('option');
+    o.value = name;
+    o.textContent = name;
+    bettorSel.appendChild(o);
+  });
+  const otherOpt = document.createElement('option');
+  otherOpt.value = '__other__';
+  otherOpt.textContent = 'Other (type below)';
+  bettorSel.appendChild(otherOpt);
+
+  // Populate competitor dropdown
+  const compSel = document.getElementById('competitor-select');
+  compSel.innerHTML = '<option value="">— Choose —</option>';
+  (INFO.active_competitors || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name;
+    compSel.appendChild(o);
+  });
+}
+
+function onBettorChange() {
+  const val = document.getElementById('bettor-select').value;
+  const wrap = document.getElementById('custom-name-wrap');
+  wrap.style.display = val === '__other__' ? 'block' : 'none';
+  updatePreview();
+}
+
+function setAmount(n) {
+  document.getElementById('amount-input').value = n;
+  updatePreview();
+}
+
+function getBettorName() {
+  const sel = document.getElementById('bettor-select').value;
+  if (sel === '__other__') return document.getElementById('custom-name').value.trim();
+  return sel;
+}
+
+function updatePreview() {
+  const bettorName = getBettorName();
+  const compId = document.getElementById('competitor-select').value;
+  const amount = parseFloat(document.getElementById('amount-input').value);
+  const mult = INFO && INFO.current_multiplier ? INFO.current_multiplier : null;
+  const t = INFO && INFO.tournament;
+  const bettingOpen = t && t.betting_open;
+
+  const ready = bettorName && compId && amount >= 1 && amount <= 500 && bettingOpen;
+  document.getElementById('btn-place').disabled = !ready;
+
+  const preview = document.getElementById('preview-card');
+  if (!ready || !mult) { preview.style.display = 'none'; return; }
+
+  const compName = document.getElementById('competitor-select').options[document.getElementById('competitor-select').selectedIndex].text;
+  const effective = amount * mult;
+
+  // Estimate payout: (my_effective / (total_effective + my_effective)) * (total_pool + amount)
+  const totalEff = (INFO.pool.total_effective || 0) + effective;
+  const totalPool = (INFO.pool.total_pool || 0) + amount;
+  const estPayout = (effective / totalEff) * totalPool;
+
+  preview.style.display = 'block';
+  document.getElementById('prev-bettor').textContent = bettorName;
+  document.getElementById('prev-competitor').textContent = compName;
+  document.getElementById('prev-amount').textContent = '$' + amount.toFixed(2);
+  document.getElementById('prev-mult').textContent = mult + '×';
+  document.getElementById('prev-effective').textContent = '$' + effective.toFixed(2);
+  document.getElementById('prev-payout').textContent = '$' + estPayout.toFixed(2);
+}
+
+async function placeBet() {
+  const bettorName = getBettorName();
+  const compId = parseInt(document.getElementById('competitor-select').value);
+  const amount = parseFloat(document.getElementById('amount-input').value);
+  const errEl = document.getElementById('err-msg');
+
+  if (!bettorName || !compId || !(amount >= 1 && amount <= 500)) {
+    showErr('Please fill in all fields with a valid amount ($1–$500).');
+    return;
+  }
+
+  document.getElementById('btn-place').disabled = true;
+  const res = await api('POST', '/api/bet/place', { bettor_name: bettorName, competitor_id: compId, amount });
+
+  if (!res.ok) {
+    showErr(res.error);
+    document.getElementById('btn-place').disabled = false;
+    return;
+  }
+
+  const d = res.data;
+  document.getElementById('conf-line1').textContent = `${d.bettor_name} bet $${d.amount.toFixed(2)} on ${d.competitor_name}`;
+  document.getElementById('conf-line2').textContent = `Multiplier: ${d.multiplier}× → Effective bet: $${d.effective_bet.toFixed(2)}`;
+
+  // Compute payout estimate with updated pool
+  const updatedPool = d.total_pool;
+  // Re-fetch for accuracy
+  await loadInfo();
+  const odds = await api('GET', '/api/status');
+  if (odds.ok) {
+    const comp = (odds.data.odds || []).find(o => o.name === d.competitor_name);
+    if (comp) {
+      document.getElementById('conf-payout').textContent = `Projected payout if ${d.competitor_name} wins: $${comp.projected_payout.toFixed(2)}`;
+    }
+  }
+
+  document.getElementById('bet-form').style.display = 'none';
+  document.getElementById('confirm-screen').style.display = 'block';
+  errEl.style.display = 'none';
+}
+
+function resetForm() {
+  document.getElementById('bet-form').style.display = 'block';
+  document.getElementById('confirm-screen').style.display = 'none';
+  document.getElementById('bettor-select').value = '';
+  document.getElementById('competitor-select').value = '';
+  document.getElementById('amount-input').value = '';
+  document.getElementById('custom-name').value = '';
+  document.getElementById('custom-name-wrap').style.display = 'none';
+  document.getElementById('preview-card').style.display = 'none';
+  document.getElementById('btn-place').disabled = true;
+  loadInfo();
+}
+
+function showErr(msg) {
+  const el = document.getElementById('err-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function api(method, url, body) {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    const data = await r.json();
+    if (!r.ok) return { ok: false, error: data.detail || 'Error' };
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: 'Network error' };
+  }
+}
+
+loadInfo();
+</script>
+</body>
+</html>

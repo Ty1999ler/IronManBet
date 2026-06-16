@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ironman — Organizer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a24;
+    --surface2: #252535;
+    --border: #333348;
+    --accent: #e63946;
+    --accent2: #f4a261;
+    --green: #2a9d8f;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --radius: 10px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+  h1 { font-size: 1.6rem; font-weight: 700; }
+  h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; }
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  a { color: var(--accent2); }
+
+  .header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .header .logo { font-size: 1.4rem; }
+  nav a { color: var(--muted); text-decoration: none; font-size: .85rem; }
+  nav a:hover { color: var(--text); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+  .section.danger { border-color: #5a1a20; }
+
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=number], input[type=password], select, textarea {
+    width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: .95rem; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
+  textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+  .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: .95rem; font-weight: 600; transition: opacity .15s; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn:hover:not(:disabled) { opacity: .85; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-warning { background: var(--accent2); color: #000; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-sm { padding: 6px 12px; font-size: .82rem; }
+  .btn-full { width: 100%; }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row .btn { flex: 1; min-width: 120px; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: .75rem; font-weight: 700; }
+  .badge-open { background: #1a4a30; color: #4ade80; }
+  .badge-closed { background: #3a1a1a; color: var(--accent); }
+  .badge-done { background: #2a2040; color: #a78bfa; }
+
+  .status-bar { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; flex: 1; min-width: 140px; }
+  .stat .label { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .stat .value { font-size: 1.5rem; font-weight: 700; margin-top: 2px; }
+
+  .msg { padding: 10px 14px; border-radius: 6px; margin-top: 12px; font-size: .9rem; }
+  .msg-ok { background: #1a3a28; color: #4ade80; }
+  .msg-err { background: #3a1a1a; color: #f87171; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr.eliminated td { opacity: .45; text-decoration: line-through; }
+
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab { padding: 8px 16px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; font-size: .9rem; }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  #login-screen { max-width: 400px; margin: 80px auto; }
+  #login-screen h1 { margin-bottom: 20px; }
+  #app-screen { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">🏆</span>
+  <h1>Ironman Organizer</h1>
+  <nav style="margin-left:auto"><a href="/tracker" target="_blank">Tracker ↗</a></nav>
+</div>
+
+<!-- Login -->
+<div class="container" id="login-screen">
+  <div class="section">
+    <h2>Organizer Login</h2>
+    <label>Password</label>
+    <input type="password" id="login-pw" placeholder="Enter organizer password">
+    <div style="margin-top:14px">
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Enter</button>
+    </div>
+    <div id="login-msg"></div>
+  </div>
+  <div class="section" style="margin-top:0">
+    <h2>First Time? Create Tournament</h2>
+    <label>Tournament Name</label>
+    <input type="text" id="setup-name" placeholder="e.g. Ironman 2025">
+    <label>Multiplier Formula</label>
+    <select id="setup-formula">
+      <option value="token">Token (steep: 7× → 1× for 8 players)</option>
+      <option value="linear">Linear (gentle: 2.0× → 1.1×)</option>
+    </select>
+    <label>Competitors (one per line)</label>
+    <textarea id="setup-competitors" placeholder="Alice&#10;Bob&#10;Charlie&#10;..."></textarea>
+    <label>Organizer Password</label>
+    <input type="password" id="setup-pw" placeholder="Choose a password">
+    <div style="margin-top:14px">
+      <button class="btn btn-warning btn-full" onclick="doSetup()">Create Tournament</button>
+    </div>
+    <div id="setup-msg"></div>
+  </div>
+</div>
+
+<!-- Main app -->
+<div class="container" id="app-screen">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="stat"><div class="label">Tournament</div><div class="value" id="stat-name">—</div></div>
+    <div class="stat"><div class="label">Round</div><div class="value" id="stat-round">—</div></div>
+    <div class="stat"><div class="label">Pool</div><div class="value" id="stat-pool">$0</div></div>
+    <div class="stat"><div class="label">Betting</div><div class="value" id="stat-betting">—</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('round')">Round Control</div>
+    <div class="tab" onclick="switchTab('bets')">All Bets</div>
+    <div class="tab" onclick="switchTab('odds')">Odds / Payouts</div>
+  </div>
+
+  <!-- Round Control tab -->
+  <div class="tab-panel active" id="tab-round">
+    <div class="section">
+      <h2>Round Controls</h2>
+      <div class="row">
+        <button class="btn btn-success" id="btn-open" onclick="doOpenBetting()">Open Betting</button>
+        <button class="btn btn-ghost" id="btn-close" onclick="doCloseBetting()">Close Betting</button>
+      </div>
+      <div id="round-msg"></div>
+    </div>
+
+    <div class="section">
+      <h2>Eliminate Competitor</h2>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:12px">Close betting first, then mark who was eliminated this round.</p>
+      <div id="eliminate-list"></div>
+      <div id="reinstated-list" style="margin-top:10px"></div>
+      <div id="elim-msg"></div>
+    </div>
+
+    <div class="section">
+      <h2>Declare Winner</h2>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:12px">When the game is over — choose the final survivor.</p>
+      <div id="winner-list"></div>
+      <div id="winner-msg"></div>
+      <div id="payout-result" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- Bets tab -->
+  <div class="tab-panel" id="tab-bets">
+    <div class="section">
+      <h2>All Bets</h2>
+      <div id="bets-table"><p style="color:var(--muted)">Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- Odds tab -->
+  <div class="tab-panel" id="tab-odds">
+    <div class="section">
+      <h2>Current Odds &amp; Projected Payouts</h2>
+      <div id="odds-table"><p style="color:var(--muted)">Loading…</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let SESSION_PW = null;
+let state = null;
+
+// --- Auth ---
+async function doLogin() {
+  const pw = document.getElementById('login-pw').value.trim();
+  if (!pw) return;
+  const res = await api('GET', `/api/organizer/status?password=${encodeURIComponent(pw)}`);
+  if (res.ok) {
+    SESSION_PW = pw;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    state = res.data;
+    render();
+    setInterval(refresh, 5000);
+  } else {
+    msg('login-msg', res.error, true);
+  }
+}
+
+async function doSetup() {
+  const name = document.getElementById('setup-name').value.trim();
+  const formula = document.getElementById('setup-formula').value;
+  const raw = document.getElementById('setup-competitors').value;
+  const competitors = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  const pw = document.getElementById('setup-pw').value.trim();
+  if (!name || competitors.length < 2 || !pw) {
+    msg('setup-msg', 'Fill in all fields (min 2 competitors).', true);
+    return;
+  }
+  const res = await api('POST', '/api/organizer/setup', { name, formula, competitors, password: pw });
+  if (res.ok) {
+    msg('setup-msg', `Tournament created! ${res.data.total_rounds} rounds. Now log in above.`, false);
+  } else {
+    msg('setup-msg', res.error, true);
+  }
+}
+
+// --- Round controls ---
+async function doOpenBetting() {
+  const res = await api('POST', '/api/organizer/open-betting', { password: SESSION_PW });
+  if (res.ok) { msg('round-msg', 'Betting is now OPEN.', false); refresh(); }
+  else msg('round-msg', res.error, true);
+}
+
+async function doCloseBetting() {
+  const res = await api('POST', '/api/organizer/close-betting', { password: SESSION_PW });
+  if (res.ok) { msg('round-msg', 'Betting is now CLOSED.', false); refresh(); }
+  else msg('round-msg', res.error, true);
+}
+
+async function doEliminate(id, name) {
+  if (!confirm(`Eliminate ${name}?`)) return;
+  const res = await api('POST', '/api/organizer/eliminate', { password: SESSION_PW, competitor_id: id });
+  if (res.ok) { msg('elim-msg', `${name} eliminated.`, false); refresh(); }
+  else msg('elim-msg', res.error, true);
+}
+
+async function doReinstate(id, name) {
+  if (!confirm(`Bring ${name} back? They'll be active again.`)) return;
+  const res = await api('POST', '/api/organizer/reinstate', { password: SESSION_PW, competitor_id: id });
+  if (res.ok) { msg('elim-msg', `${name} reinstated.`, false); refresh(); }
+  else msg('elim-msg', res.error, true);
+}
+
+async function doDeclareWinner(id, name) {
+  if (!confirm(`Declare ${name} the winner? This ends the tournament.`)) return;
+  const res = await api('POST', '/api/organizer/declare-winner', { password: SESSION_PW, competitor_id: id });
+  if (res.ok) {
+    msg('winner-msg', `${name} wins! Pool: $${res.data.total_pool.toFixed(2)}`, false);
+    renderPayoutResult(res.data);
+    refresh();
+  } else {
+    msg('winner-msg', res.error, true);
+  }
+}
+
+// --- Render ---
+function render() {
+  if (!state) return;
+  const t = state.tournament;
+  const bettingOpen = t.betting_open;
+  const isOver = !!t.winner;
+
+  document.getElementById('stat-name').textContent = t.name || '—';
+  document.getElementById('stat-round').textContent = t.current_round > 0 ? `${t.current_round} / ${t.total_rounds}` : 'Not started';
+  document.getElementById('stat-pool').textContent = '$' + (state.pool.total_pool || 0).toFixed(2);
+  const bettingEl = document.getElementById('stat-betting');
+  if (isOver) {
+    bettingEl.innerHTML = '<span class="badge badge-done">Over</span>';
+  } else if (bettingOpen) {
+    bettingEl.innerHTML = '<span class="badge badge-open">Open</span>';
+  } else {
+    bettingEl.innerHTML = '<span class="badge badge-closed">Closed</span>';
+  }
+
+  // Eliminate list — only active, only when betting is closed and not over
+  const elimList = document.getElementById('eliminate-list');
+  const reinstatedList = document.getElementById('reinstated-list');
+  const active = state.competitors.filter(c => !c.eliminated);
+  const eliminated = state.competitors.filter(c => c.eliminated);
+  if (isOver) {
+    elimList.innerHTML = '<p style="color:var(--muted)">Tournament is over.</p>';
+    reinstatedList.innerHTML = '';
+  } else if (bettingOpen) {
+    elimList.innerHTML = '<p style="color:var(--muted)">Close betting before eliminating a competitor.</p>';
+    reinstatedList.innerHTML = '';
+  } else if (active.length === 0) {
+    elimList.innerHTML = '<p style="color:var(--muted)">No active competitors.</p>';
+    reinstatedList.innerHTML = '';
+  } else {
+    elimList.innerHTML = active.map(c =>
+      `<button class="btn btn-ghost btn-sm" style="margin:4px" onclick="doEliminate(${c.id}, '${esc(c.name)}')">${esc(c.name)}</button>`
+    ).join('');
+    reinstatedList.innerHTML = eliminated.length
+      ? '<p style="color:var(--muted);font-size:.82rem;margin-bottom:6px">Eliminated — click to bring back:</p>'
+        + eliminated.map(c =>
+            `<button class="btn btn-ghost btn-sm" style="margin:4px;opacity:.5" onclick="doReinstate(${c.id}, '${esc(c.name)}')">↩ ${esc(c.name)}</button>`
+          ).join('')
+      : '';
+  }
+
+  // Winner list — active competitors only
+  const winnerList = document.getElementById('winner-list');
+  if (isOver) {
+    winnerList.innerHTML = `<p style="color:#a78bfa;font-weight:600">Winner: ${esc(state.winner ? state.winner.name : '?')}</p>`;
+  } else if (active.length === 0) {
+    winnerList.innerHTML = '<p style="color:var(--muted)">No active competitors.</p>';
+  } else {
+    winnerList.innerHTML = active.map(c =>
+      `<button class="btn btn-warning btn-sm" style="margin:4px" onclick="doDeclareWinner(${c.id}, '${esc(c.name)}')">${esc(c.name)}</button>`
+    ).join('');
+  }
+
+  renderBets();
+  renderOdds();
+}
+
+function renderBets() {
+  const bets = state.bets || [];
+  const el = document.getElementById('bets-table');
+  if (!bets.length) { el.innerHTML = '<p style="color:var(--muted)">No bets yet.</p>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Bettor</th><th>Competitor</th><th>Amount</th><th>Round</th><th>Mult.</th><th>Effective</th></tr></thead>
+    <tbody>${bets.map(b => `<tr>
+      <td>${esc(b.bettor_name)}</td>
+      <td>${esc(b.competitor_name)}</td>
+      <td>$${b.amount.toFixed(2)}</td>
+      <td>${b.round_placed}</td>
+      <td>${b.multiplier}×</td>
+      <td>$${b.effective_bet.toFixed(2)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderOdds() {
+  const odds = state.odds || [];
+  const el = document.getElementById('odds-table');
+  if (!odds.length) { el.innerHTML = '<p style="color:var(--muted)">No bets yet.</p>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Competitor</th><th>Status</th><th>Eff. Bets</th><th>Share</th><th>Proj. Payout</th></tr></thead>
+    <tbody>${odds.map(o => `<tr${o.eliminated ? ' class="eliminated"' : ''}>
+      <td>${esc(o.name)}</td>
+      <td>${o.eliminated ? 'Out' : 'Active'}</td>
+      <td>$${o.effective_bet.toFixed(2)}</td>
+      <td>${(o.share * 100).toFixed(1)}%</td>
+      <td>$${o.projected_payout.toFixed(2)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderPayoutResult(data) {
+  if (!data.payouts || !data.payouts.length) return;
+  const el = document.getElementById('payout-result');
+  el.innerHTML = `<h3>Payout Breakdown — ${esc(data.winner)} wins $${data.total_pool.toFixed(2)}</h3>
+  <table>
+    <thead><tr><th>Bettor</th><th>Bet</th><th>Round</th><th>Mult.</th><th>Eff. Bet</th><th>Share</th><th>Payout</th></tr></thead>
+    <tbody>${data.payouts.map(p => `<tr>
+      <td><strong>${esc(p.bettor_name)}</strong></td>
+      <td>$${p.amount_bet.toFixed(2)}</td>
+      <td>${p.round_placed}</td>
+      <td>${p.multiplier}×</td>
+      <td>$${p.effective_bet.toFixed(2)}</td>
+      <td>${(p.share * 100).toFixed(1)}%</td>
+      <td><strong>$${p.payout.toFixed(2)}</strong></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+async function refresh() {
+  const res = await api('GET', `/api/organizer/status?password=${encodeURIComponent(SESSION_PW)}`);
+  if (res.ok) {
+    state = res.data;
+    // Also fetch bets
+    const betsRes = await api('GET', `/api/organizer/bets?password=${encodeURIComponent(SESSION_PW)}`);
+    if (betsRes.ok) state.bets = betsRes.data;
+    render();
+  }
+}
+
+// --- Tabs ---
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    const tabs = ['round', 'bets', 'odds'];
+    el.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(el => {
+    el.classList.toggle('active', el.id === 'tab-' + name);
+  });
+}
+
+// --- Utilities ---
+function msg(id, text, isError) {
+  const el = document.getElementById(id);
+  el.className = 'msg ' + (isError ? 'msg-err' : 'msg-ok');
+  el.textContent = text;
+  setTimeout(() => { el.textContent = ''; el.className = ''; }, 5000);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function api(method, url, body) {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    const data = await r.json();
+    if (!r.ok) return { ok: false, error: data.detail || 'Error' };
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: 'Network error' };
+  }
+}
+
+// Enter key on login
+document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
