@@ -141,6 +141,14 @@ def eliminate(body: EliminateRequest):
     return {"ok": True}
 
 
+@app.post("/api/organizer/testmode")
+def testmode():
+    """Build a fully-simulated 20-player demo tournament at the final 4.
+    Organizer password for the seeded tournament is 'TestMode'."""
+    db.seed_test_mode()
+    return {"ok": True, "password": "TestMode"}
+
+
 @app.post("/api/organizer/reinstate")
 def reinstate(body: EliminateRequest):
     if not db.verify_password(body.password):

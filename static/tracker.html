@@ -7,282 +7,460 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #0f0f13;
-    --surface: #1a1a24;
-    --surface2: #252535;
-    --border: #333348;
+    --bg: #0a0a0f;
+    --surface: rgba(26, 26, 40, 0.7);
+    --surface-solid: #15151f;
+    --surface2: #20202e;
+    --border: rgba(120, 120, 160, 0.16);
+    --border-bright: rgba(244, 162, 97, 0.35);
     --accent: #e63946;
     --accent2: #f4a261;
-    --green: #2a9d8f;
+    --gold: #fbbf24;
+    --green: #4ade80;
+    --cyan: #38bdf8;
     --purple: #a78bfa;
-    --text: #e8e8f0;
-    --muted: #888899;
-    --radius: 12px;
+    --text: #f0f0f8;
+    --muted: #8a8aa0;
+    --radius: 16px;
   }
+  html { scroll-behavior: smooth; }
   body {
-    background: var(--bg); color: var(--text);
+    background: var(--bg);
+    color: var(--text);
     font-family: system-ui, -apple-system, sans-serif;
     font-size: 15px; line-height: 1.5;
+    min-height: 100dvh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* Ambient gradient mesh background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(900px 600px at 12% -5%, rgba(244,162,97,0.10), transparent 60%),
+      radial-gradient(800px 600px at 95% 8%, rgba(230,57,70,0.10), transparent 55%),
+      radial-gradient(700px 700px at 50% 110%, rgba(56,189,248,0.07), transparent 60%);
+    pointer-events: none;
   }
 
   .header {
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    padding: 16px 22px;
     display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: rgba(10,10,15,0.6);
+    position: sticky; top: 0; z-index: 50;
   }
-  .header h1 { font-size: 1.25rem; font-weight: 700; }
+  .header .logo {
+    font-size: 1.3rem;
+    filter: drop-shadow(0 0 8px rgba(244,162,97,0.6));
+  }
+  .header h1 {
+    font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #fff, var(--accent2));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
   .header nav { margin-left: auto; }
-  .header nav a { color: var(--muted); text-decoration: none; font-size: .85rem; }
-
-  .container { max-width: 700px; margin: 0 auto; padding: 16px 14px 60px; }
-
-  .banner {
-    border-radius: var(--radius); padding: 11px 16px;
-    margin-bottom: 16px; font-size: .9rem; font-weight: 600;
-    display: flex; align-items: center; gap: 8px;
+  .header nav a {
+    color: var(--muted); text-decoration: none; font-size: .82rem; font-weight: 600;
+    padding: 7px 14px; border: 1px solid var(--border); border-radius: 99px;
+    transition: all .2s;
   }
-  .banner-open  { background: #1a3a28; border: 1px solid #2a5a38; color: #4ade80; }
-  .banner-closed{ background: #2a2020; border: 1px solid #4a2828; color: #f87171; }
-  .banner-over  { background: #1e1a38; border: 1px solid #3a2a60; color: var(--purple); }
-  .banner-none  { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+  .header nav a:hover { color: var(--text); border-color: var(--border-bright); }
 
-  /* Stats row */
-  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-  .stat-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 14px; flex: 1; min-width: 90px;
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 70px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    border-radius: 24px;
+    padding: 28px 28px 24px;
+    margin-bottom: 22px;
+    background:
+      linear-gradient(135deg, rgba(244,162,97,0.10), rgba(230,57,70,0.06) 50%, rgba(167,139,250,0.06)),
+      var(--surface-solid);
+    border: 1px solid var(--border);
+    overflow: hidden;
   }
-  .stat-box .slabel { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .stat-box .svalue { font-size: 1.3rem; font-weight: 700; margin-top: 1px; }
+  .hero::after {
+    content: ''; position: absolute; top: -40%; right: -10%;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(244,162,97,0.20), transparent 65%);
+    pointer-events: none;
+  }
+  .hero-status {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: .78rem; font-weight: 700; letter-spacing: .02em;
+    padding: 5px 13px; border-radius: 99px; margin-bottom: 16px;
+    position: relative; z-index: 1;
+  }
+  .hs-open   { background: rgba(74,222,128,0.14); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+  .hs-closed { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.28); }
+  .hs-over   { background: rgba(167,139,250,0.14); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+  .hs-none   { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
 
-  /* Section */
-  .section { margin-bottom: 28px; }
-  .section-title {
-    font-size: .72rem; font-weight: 700; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+  .pool-label {
+    font-size: .74rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .14em; font-weight: 700; position: relative; z-index: 1;
+  }
+  .pool-value {
+    font-size: clamp(2.8rem, 11vw, 4.6rem); font-weight: 900; line-height: 1;
+    letter-spacing: -0.03em; margin: 4px 0 2px;
+    background: linear-gradient(135deg, #fff 10%, var(--accent2) 55%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 50px rgba(244,162,97,0.35);
+    position: relative; z-index: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .pool-sub { font-size: .88rem; color: var(--muted); position: relative; z-index: 1; }
+
+  .hero-stats {
+    display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .hstat {
+    flex: 1; min-width: 88px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 13px;
+    backdrop-filter: blur(8px);
+  }
+  .hstat .l { font-size: .66rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+  .hstat .v { font-size: 1.35rem; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- DASHBOARD GRID ---------- */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 760px) {
+    .dashboard { grid-template-columns: 1fr 1fr; }
+    .col-span-2 { grid-column: 1 / -1; }
   }
 
-  /* Competitor odds card */
-  .comp-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 13px 15px;
-    margin-bottom: 8px;
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    backdrop-filter: blur(14px);
+    transition: border-color .25s, transform .25s;
+    position: relative;
+    overflow: hidden;
   }
-  .comp-card.eliminated { opacity: .38; }
-  .comp-card.winner { border-color: var(--accent2); background: #1e1a10; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title {
+    font-size: .72rem; font-weight: 800; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px;
+    line-height: 1.3;
+  }
+  .card-title .ico { font-size: .95rem; filter: saturate(1.4); margin-right: 7px; }
 
-  .comp-top { display: flex; align-items: center; gap: 10px; }
+  /* ---------- STANDINGS ---------- */
+  .comp-row {
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-row.eliminated { opacity: .4; }
+
+  .comp-head { display: flex; align-items: center; gap: 11px; }
+  .rank-num {
+    font-size: .8rem; font-weight: 800; color: var(--muted);
+    min-width: 18px; text-align: center;
+  }
   .comp-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--surface2); display: flex; align-items: center;
-    justify-content: center; font-weight: 700; font-size: .9rem;
-    color: var(--accent2); flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: .82rem; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--surface2), #2a2a3c);
+    border: 1px solid var(--border);
+    color: var(--accent2);
   }
-  .comp-card.eliminated .comp-avatar { color: var(--muted); }
-  .comp-name { font-weight: 700; font-size: .98rem; flex: 1; }
-  .comp-status { font-size: .75rem; color: var(--muted); }
-  .comp-payout { font-size: 1.1rem; font-weight: 700; color: var(--accent2); text-align: right; }
-  .comp-payout-label { font-size: .72rem; color: var(--muted); text-align: right; }
+  .comp-row.leader .comp-avatar {
+    background: linear-gradient(135deg, rgba(244,162,97,0.25), rgba(230,57,70,0.15));
+    border-color: var(--border-bright);
+    box-shadow: 0 0 16px rgba(244,162,97,0.3);
+  }
+  .comp-row.winner .comp-avatar {
+    background: linear-gradient(135deg, var(--gold), var(--accent2));
+    color: #1a1208; box-shadow: 0 0 20px rgba(251,191,36,0.5);
+  }
+  .comp-name { font-weight: 700; font-size: .96rem; flex: 1; display: flex; align-items: center; gap: 6px; }
+  .frontrunner-tag {
+    font-size: .58rem; font-weight: 800; letter-spacing: .08em;
+    padding: 2px 7px; border-radius: 99px;
+    background: rgba(244,162,97,0.18); color: var(--accent2);
+    border: 1px solid var(--border-bright);
+  }
+  .comp-odds { text-align: right; }
+  .comp-odds .pct { font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .comp-odds .mult { font-size: .68rem; color: var(--muted); }
 
-  /* Odds bar */
-  .odds-bar-wrap { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
-  .odds-bar-bg { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-  .odds-bar-fill { height: 6px; border-radius: 3px; background: var(--accent2); transition: width .4s; }
-  .comp-card.eliminated .odds-bar-fill { background: var(--muted); }
-  .comp-card.winner .odds-bar-fill { background: var(--accent2); }
-  .odds-pct { font-size: .78rem; color: var(--muted); min-width: 36px; text-align: right; }
+  .comp-track { margin-top: 9px; margin-left: 29px; height: 7px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .comp-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    box-shadow: 0 0 12px rgba(244,162,97,0.4);
+    transition: width .7s cubic-bezier(.16,1,.3,1);
+  }
+  .comp-row.winner .comp-fill { background: linear-gradient(90deg, var(--gold), var(--accent2)); }
+  .comp-row.eliminated .comp-fill { background: var(--muted); box-shadow: none; }
+  .comp-sub { font-size: .73rem; color: var(--muted); margin-top: 5px; margin-left: 29px; }
 
-  /* Toggle eliminated */
   .toggle-btn {
-    background: none; border: 1px solid var(--border); color: var(--muted);
-    border-radius: 8px; padding: 7px 14px; font-size: .82rem; cursor: pointer;
-    width: 100%; text-align: left; margin-bottom: 8px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 10px; padding: 8px 14px; font-size: .8rem; font-weight: 600; cursor: pointer;
+    width: 100%; text-align: left; margin-top: 12px; transition: all .2s;
   }
-  .toggle-btn:hover { color: var(--text); border-color: var(--text); }
+  .toggle-btn:hover { color: var(--text); border-color: var(--border-bright); }
+  #elim-section { margin-top: 10px; }
 
-  /* Selects */
+  /* ---------- SELECTS ---------- */
   select {
-    width: 100%; padding: 11px 14px; background: var(--surface2);
-    border: 1.5px solid var(--border); border-radius: 10px;
-    color: var(--text); font-size: .95rem; outline: none; appearance: none;
-    -webkit-appearance: none; cursor: pointer; margin-bottom: 14px;
+    width: 100%; padding: 12px 14px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border); border-radius: 11px;
+    color: var(--text); font-size: .92rem; font-weight: 600; outline: none;
+    appearance: none; -webkit-appearance: none; cursor: pointer; margin-bottom: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238a8aa0' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
   }
-  select:focus { border-color: var(--accent2); }
+  select:focus { border-color: var(--border-bright); }
 
-  /* Panel that appears below a select */
-  .panel {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px;
-  }
-  .panel-empty { color: var(--muted); font-size: .9rem; text-align: center; padding: 20px; }
+  .panel-empty { color: var(--muted); font-size: .88rem; text-align: center; padding: 26px 10px; }
 
-  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-  th { text-align: left; padding: 7px 8px; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
-  td { padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr.elim-row td { opacity: .45; }
-
-  /* Bettor cards in "if X wins" panel */
-  .winner-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 0; border-bottom: 1px solid var(--border);
-  }
+  /* ---------- IF X WINS ---------- */
+  .winner-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .winner-row:last-child { border-bottom: none; }
   .winner-avatar {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: var(--surface2); display: flex; align-items: center;
-    justify-content: center; font-size: .75rem; font-weight: 700;
-    color: var(--accent2); flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--surface2), #2a2a3c);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 800; color: var(--green); flex-shrink: 0;
   }
-  .winner-name { flex: 1; font-weight: 600; font-size: .92rem; }
-  .winner-sub { font-size: .75rem; color: var(--muted); }
-  .winner-payout { font-size: 1.05rem; font-weight: 700; color: #4ade80; }
+  .winner-name { flex: 1; font-weight: 700; font-size: .9rem; }
+  .winner-sub { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+  .winner-bar { margin-top: 6px; height: 5px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .winner-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 99px; transition: width .6s; }
+  .winner-payout { font-size: 1.05rem; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
 
-  /* Bettor portfolio */
+  /* ---------- BETTOR PORTFOLIO ---------- */
   .bet-chip {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
-    display: flex; gap: 10px; align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 13px; margin-bottom: 9px;
+    display: flex; gap: 11px; align-items: center;
   }
-  .bet-chip.dead { opacity: .4; }
+  .bet-chip.dead { opacity: .42; }
   .bet-chip-left { flex: 1; min-width: 0; }
-  .bet-chip-comp { font-weight: 700; font-size: .95rem; }
-  .bet-chip-sub { font-size: .77rem; color: var(--muted); margin-top: 1px; }
+  .bet-chip-comp { font-weight: 700; font-size: .92rem; display: flex; align-items: center; gap: 6px; }
+  .bet-chip-sub { font-size: .73rem; color: var(--muted); margin-top: 2px; }
   .bet-chip-right { text-align: right; flex-shrink: 0; }
-  .bet-chip-payout { font-size: 1rem; font-weight: 700; color: var(--accent2); }
+  .bet-chip-payout { font-size: 1.02rem; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
   .bet-chip-payout.dead { color: var(--muted); }
-  .bet-chip-label { font-size: .72rem; color: var(--muted); }
+  .bet-chip-label { font-size: .68rem; color: var(--muted); }
 
-  .totals-row {
-    display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;
-  }
-  .total-box {
-    flex: 1; min-width: 80px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 12px;
-  }
-  .total-box .tl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .total-box .tv { font-size: 1.1rem; font-weight: 700; margin-top: 2px; }
+  .totals-row { display: flex; gap: 9px; margin-top: 13px; flex-wrap: wrap; }
+  .total-box { flex: 1; min-width: 74px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 11px; }
+  .total-box .tl { font-size: .64rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+  .total-box .tv { font-size: 1.05rem; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
-  /* Leaderboard */
-  .lb-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 0; border-bottom: 1px solid var(--border);
+  /* ---------- PODIUM LEADERBOARD ---------- */
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin-bottom: 16px; padding-top: 8px; }
+  .podium-spot { flex: 1; max-width: 96px; text-align: center; }
+  .podium-avatar {
+    width: 46px; height: 46px; border-radius: 14px; margin: 0 auto 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1rem; position: relative;
   }
+  .podium-spot.p1 .podium-avatar { background: linear-gradient(135deg, var(--gold), #f59e0b); color: #1a1208; box-shadow: 0 0 22px rgba(251,191,36,0.45); width: 54px; height: 54px; }
+  .podium-spot.p2 .podium-avatar { background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: #1a1a25; box-shadow: 0 0 14px rgba(148,163,184,0.3); }
+  .podium-spot.p3 .podium-avatar { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; box-shadow: 0 0 14px rgba(180,83,9,0.3); }
+  .podium-crown { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 1rem; }
+  .podium-name { font-size: .78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .podium-amt { font-size: .82rem; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
+  .podium-bar { margin-top: 7px; border-radius: 8px 8px 0 0; background: linear-gradient(180deg, rgba(244,162,97,0.4), rgba(244,162,97,0.08)); border: 1px solid var(--border); border-bottom: none; }
+  .podium-spot.p1 .podium-bar { background: linear-gradient(180deg, rgba(251,191,36,0.5), rgba(251,191,36,0.08)); }
+
+  .lb-row { display: flex; align-items: center; gap: 11px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .lb-row:last-child { border-bottom: none; }
-  .lb-rank { font-size: 1rem; font-weight: 700; color: var(--muted); min-width: 24px; }
-  .lb-rank.gold { color: #fbbf24; }
-  .lb-rank.silver { color: #94a3b8; }
-  .lb-rank.bronze { color: #b45309; }
-  .lb-name { flex: 1; font-weight: 600; }
-  .lb-sub { font-size: .75rem; color: var(--muted); }
-  .lb-amount { font-size: 1rem; font-weight: 700; color: var(--accent2); }
+  .lb-rank { font-size: .82rem; font-weight: 800; color: var(--muted); min-width: 22px; }
+  .lb-name { flex: 1; font-weight: 700; font-size: .9rem; }
+  .lb-sub { font-size: .72rem; color: var(--muted); }
+  .lb-amount { font-size: .95rem; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
 
-  /* Round activity */
-  .round-bars { display: flex; gap: 6px; align-items: flex-end; height: 60px; }
-  .round-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .round-bar { width: 100%; background: var(--accent2); border-radius: 4px 4px 0 0; min-height: 4px; transition: height .4s; }
-  .round-bar-label { font-size: .68rem; color: var(--muted); }
-  .round-bar-val { font-size: .7rem; color: var(--text); }
+  /* ---------- ROUND ACTIVITY ---------- */
+  .round-bars { display: flex; gap: 8px; align-items: flex-end; height: 96px; padding-top: 6px; }
+  .round-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+  .round-bar {
+    width: 100%; border-radius: 7px 7px 0 0; min-height: 6px;
+    background: linear-gradient(180deg, var(--cyan), rgba(56,189,248,0.25));
+    box-shadow: 0 0 12px rgba(56,189,248,0.3);
+    transition: height .7s cubic-bezier(.16,1,.3,1);
+  }
+  .round-bar-val { font-size: .72rem; font-weight: 800; }
+  .round-bar-label { font-size: .66rem; color: var(--muted); font-weight: 700; }
 
-  /* Final payout table */
-  .payout-section { margin-top: 8px; }
+  /* ---------- MARKET CHARTS ---------- */
+  .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart-empty { color: var(--muted); font-size: .85rem; text-align: center; padding: 30px 10px; }
 
-  .refresh-note { text-align: center; font-size: .75rem; color: var(--muted); margin-top: 24px; }
-  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+  /* Donut */
+  .donut-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .donut-svg { width: 150px; height: 150px; flex-shrink: 0; }
+  .donut-center-big { font-size: 1.4rem; font-weight: 900; fill: var(--text); }
+  .donut-center-sm { font-size: .5rem; font-weight: 700; fill: var(--muted); letter-spacing: .08em; }
+  .donut-legend { flex: 1; min-width: 130px; }
+  .dleg-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: .82rem; }
+  .dleg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .dleg-name { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dleg-pct { font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-  .badge { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: .7rem; font-weight: 700; }
-  .badge-alive { background: #1a3a28; color: #4ade80; }
-  .badge-out { background: #3a1a1a; color: #f87171; }
+  /* Line chart */
+  .line-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; }
+  .lleg-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; }
+  .lleg-item.faded { opacity: .45; }
+  .lleg-dot { width: 11px; height: 4px; border-radius: 2px; }
+  .lleg-name { font-weight: 600; }
+  .lleg-pct { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------- FINAL PAYOUTS ---------- */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 440px; }
+  th { text-align: left; padding: 8px 9px; color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 9px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  .winner-payout-cell { color: var(--green); font-weight: 800; }
+
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .66rem; font-weight: 800; letter-spacing: .02em; }
+  .badge-alive { background: rgba(74,222,128,0.15); color: var(--green); }
+  .badge-out { background: rgba(248,113,113,0.13); color: #f87171; }
+
+  .refresh-note { text-align: center; font-size: .74rem; color: var(--muted); margin-top: 28px; }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1; transform: scale(1)} 50%{opacity:.4; transform: scale(.8)} }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
+  .empty-state .big { font-size: 2.4rem; margin-bottom: 10px; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <span style="font-size:1.3rem">📊</span>
+  <span class="logo">⚡</span>
   <h1 id="tourney-name">Ironman Tracker</h1>
-  <nav><a href="/">Bet</a></nav>
+  <nav><a href="/">Place a Bet →</a></nav>
 </div>
 
 <div class="container">
 
-  <div id="banner" class="banner banner-none">Loading…</div>
-
-  <div class="stats-row" id="stats-row" style="display:none">
-    <div class="stat-box"><div class="slabel">Pool</div><div class="svalue" id="s-pool">$0</div></div>
-    <div class="stat-box"><div class="slabel">Round</div><div class="svalue" id="s-round">—</div></div>
-    <div class="stat-box"><div class="slabel">Active</div><div class="svalue" id="s-active">—</div></div>
-    <div class="stat-box"><div class="slabel">Multiplier</div><div class="svalue" id="s-mult">—</div></div>
-    <div class="stat-box"><div class="slabel">Bets placed</div><div class="svalue" id="s-bets">—</div></div>
+  <!-- Empty / no tournament -->
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div class="big">🏁</div>
+    <div>No tournament set up yet.</div>
   </div>
 
-  <!-- Standings -->
-  <div class="section" id="standings-section" style="display:none">
-    <div class="section-title">Standings — implied odds</div>
-    <div id="active-list"></div>
-    <div style="margin-top:8px">
+  <!-- HERO -->
+  <div class="hero" id="hero" style="display:none">
+    <div class="hero-status hs-none" id="hero-status">Loading…</div>
+    <div class="pool-label">Total Prize Pool</div>
+    <div class="pool-value" id="pool-value">$0</div>
+    <div class="pool-sub" id="pool-sub">Winner takes all</div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="l">Round</div><div class="v" id="s-round">—</div></div>
+      <div class="hstat"><div class="l">Still In</div><div class="v" id="s-active">—</div></div>
+      <div class="hstat"><div class="l">Multiplier</div><div class="v" id="s-mult">—</div></div>
+      <div class="hstat"><div class="l">Bets Placed</div><div class="v" id="s-bets">—</div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard" id="dashboard" style="display:none">
+
+    <!-- Market movement line chart (full width showpiece) -->
+    <div class="card col-span-2" id="movement-section" style="display:none">
+      <div class="card-title"><span class="ico">📉</span> Market Movement — Implied Odds by Round</div>
+      <div id="movement-chart"></div>
+      <div class="line-legend" id="movement-legend"></div>
+    </div>
+
+    <!-- Standings (left, tall) -->
+    <div class="card" id="standings-section">
+      <div class="card-title"><span class="ico">🏇</span> Standings — Implied Odds</div>
+      <div id="active-list"></div>
       <button class="toggle-btn" id="toggle-elim-btn" onclick="toggleElim()" style="display:none">▶ Show eliminated</button>
       <div id="elim-section" style="display:none">
-        <div class="section-title" style="margin-top:8px">Eliminated</div>
+        <div class="card-title" style="margin-top:14px">Eliminated</div>
         <div id="elim-list"></div>
       </div>
     </div>
-  </div>
 
-  <!-- If X wins simulator -->
-  <div class="section" id="sim-section" style="display:none">
-    <div class="section-title">If this competitor wins…</div>
-    <select id="sim-select" onchange="renderSim()">
-      <option value="">— Choose a competitor —</option>
-    </select>
-    <div class="panel" id="sim-panel">
-      <div class="panel-empty">Select a competitor to see who profits.</div>
+    <!-- Right column wrapper: market share + leaderboard + round activity stacked -->
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <div class="card" id="share-section" style="display:none">
+        <div class="card-title"><span class="ico">🥧</span> Market Share</div>
+        <div class="donut-wrap">
+          <svg class="donut-svg" id="donut-svg" viewBox="0 0 200 200"></svg>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
+      </div>
+
+      <div class="card" id="lb-section" style="display:none">
+        <div class="card-title"><span class="ico">👑</span> Biggest Players</div>
+        <div id="podium"></div>
+        <div id="lb-panel"></div>
+      </div>
+
+      <div class="card" id="activity-section" style="display:none">
+        <div class="card-title"><span class="ico">📈</span> Bets by Round</div>
+        <div class="round-bars" id="round-bars"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Bettor portfolio -->
-  <div class="section" id="bettor-section" style="display:none">
-    <div class="section-title">A bettor's portfolio</div>
-    <select id="bettor-select" onchange="renderBettor()">
-      <option value="">— Choose a bettor —</option>
-    </select>
-    <div class="panel" id="bettor-panel">
-      <div class="panel-empty">Select a bettor to see their bets.</div>
+    <!-- If X wins (left) -->
+    <div class="card" id="sim-section" style="display:none">
+      <div class="card-title"><span class="ico">🔮</span> Payout Simulator</div>
+      <select id="sim-select" onchange="renderSim()">
+        <option value="">— If this competitor wins… —</option>
+      </select>
+      <div id="sim-panel"><div class="panel-empty">Pick a competitor to see who cashes in.</div></div>
     </div>
-  </div>
 
-  <!-- Leaderboard -->
-  <div class="section" id="lb-section" style="display:none">
-    <div class="section-title">Most money in the pool</div>
-    <div class="panel" id="lb-panel"></div>
-  </div>
-
-  <!-- Round activity -->
-  <div class="section" id="activity-section" style="display:none">
-    <div class="section-title">Bets by round</div>
-    <div class="panel">
-      <div class="round-bars" id="round-bars"></div>
+    <!-- Bettor portfolio (right) -->
+    <div class="card" id="bettor-section" style="display:none">
+      <div class="card-title"><span class="ico">💼</span> Bettor Portfolio</div>
+      <select id="bettor-select" onchange="renderBettor()">
+        <option value="">— Choose a bettor… —</option>
+      </select>
+      <div id="bettor-panel"><div class="panel-empty">Pick someone to see their bets.</div></div>
     </div>
-  </div>
 
-  <!-- Final payouts (shown when winner declared) -->
-  <div class="section payout-section" id="payout-section" style="display:none">
-    <div class="section-title">Final payouts</div>
-    <div class="panel">
-      <table id="payout-table">
-        <thead><tr><th>Bettor</th><th>Bet</th><th>Round</th><th>Mult.</th><th>Eff. Bet</th><th>Share</th><th>Payout</th></tr></thead>
-        <tbody></tbody>
-      </table>
+    <!-- Final payouts (full width) -->
+    <div class="card col-span-2" id="payout-section" style="display:none">
+      <div class="card-title"><span class="ico">🏆</span> Final Payouts</div>
+      <div class="table-scroll">
+        <table id="payout-table">
+          <thead><tr><th>Bettor</th><th>Bet</th><th>Rnd</th><th>Mult</th><th>Eff.</th><th>Share</th><th>Payout</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 
-  <div class="refresh-note"><span class="dot"></span>Updates every 10 seconds</div>
+  <div class="refresh-note"><span class="dot"></span>Live — updates every 10 seconds</div>
 </div>
 
 <script>
-let DATA = null;   // /api/status
-let BETS = null;   // /api/public/bets
+let DATA = null;
+let BETS = null;
 let elimVisible = false;
+const prevValues = {};   // for count-up animation
 
 function toggleElim() {
   elimVisible = !elimVisible;
@@ -290,21 +468,32 @@ function toggleElim() {
   document.getElementById('toggle-elim-btn').textContent = (elimVisible ? '▼ Hide' : '▶ Show') + ' eliminated';
 }
 
-function initials(name) {
-  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-}
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
+function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmt(n) { return '$' + Number(n).toFixed(2); }
+function fmtShort(n) {
+  n = Number(n);
+  if (n >= 1000) return '$' + (n/1000).toFixed(n >= 10000 ? 0 : 1) + 'k';
+  return '$' + n.toFixed(n % 1 === 0 ? 0 : 2);
+}
+
+// Animated count-up for the pool value
+function animateValue(el, key, target, formatter) {
+  const start = prevValues[key] ?? target;
+  prevValues[key] = target;
+  if (start === target) { el.textContent = formatter(target); return; }
+  const dur = 700, t0 = performance.now();
+  function step(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = formatter(start + (target - start) * eased);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 async function load() {
-  const [statusRes, betsRes] = await Promise.all([
-    fetch('/api/status'),
-    fetch('/api/public/bets'),
-  ]);
+  const [statusRes, betsRes] = await Promise.all([ fetch('/api/status'), fetch('/api/public/bets') ]);
   if (statusRes.ok) DATA = await statusRes.json();
   if (betsRes.ok) BETS = await betsRes.json();
   render();
@@ -312,99 +501,225 @@ async function load() {
 
 function render() {
   if (!DATA || !DATA.tournament) {
-    document.getElementById('banner').className = 'banner banner-none';
-    document.getElementById('banner').textContent = 'No tournament set up yet.';
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('hero').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'none';
     return;
   }
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('hero').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'grid';
 
   const t = DATA.tournament;
   document.getElementById('tourney-name').textContent = t.name;
-  document.getElementById('stats-row').style.display = 'flex';
 
-  // Banner
-  const banner = document.getElementById('banner');
+  // Hero status pill
+  const hs = document.getElementById('hero-status');
   if (t.winner) {
-    banner.className = 'banner banner-over';
-    banner.innerHTML = `🏆 Tournament over — <strong>${esc(t.winner.name)}</strong> wins!`;
+    hs.className = 'hero-status hs-over';
+    hs.innerHTML = `🏆 ${esc(t.winner.name)} WINS`;
   } else if (t.betting_open) {
-    banner.className = 'banner banner-open';
-    banner.innerHTML = `<span class="dot"></span>Betting OPEN — Round ${t.current_round}`;
+    hs.className = 'hero-status hs-open';
+    hs.innerHTML = `<span class="dot"></span>BETTING OPEN · ROUND ${t.current_round}`;
   } else {
-    banner.className = 'banner banner-closed';
-    banner.textContent = t.current_round > 0 ? `Betting closed — Round ${t.current_round} complete` : 'Betting not yet open';
+    hs.className = 'hero-status hs-closed';
+    hs.textContent = t.current_round > 0 ? `BETTING CLOSED · ROUND ${t.current_round}` : 'BETTING NOT YET OPEN';
   }
 
-  // Stats
-  document.getElementById('s-pool').textContent = fmt(DATA.pool.total_pool || 0);
+  // Pool count-up
+  animateValue(document.getElementById('pool-value'), 'pool', DATA.pool.total_pool || 0, v => fmtShort(v));
+  document.getElementById('pool-sub').textContent =
+    t.winner ? `Paid out to backers of ${t.winner.name}` : 'Winner takes all · no house cut';
+
+  // Hero stats
   document.getElementById('s-round').textContent = t.current_round > 0 ? `${t.current_round}/${t.total_rounds}` : '—';
   document.getElementById('s-active').textContent = (DATA.active_competitors || []).length;
   document.getElementById('s-mult').textContent = DATA.current_multiplier ? DATA.current_multiplier + '×' : '—';
   document.getElementById('s-bets').textContent = BETS ? BETS.length : '—';
 
+  buildColorMap();
+  renderMarketShare();
+  renderMarketMovement();
   renderStandings();
   renderDropdowns();
   renderLeaderboard();
   renderRoundActivity();
+  renderFinalPayouts();
+}
 
-  // Final payouts
-  if (DATA.payouts && DATA.payouts.length > 0) {
-    document.getElementById('payout-section').style.display = 'block';
-    const tbody = document.querySelector('#payout-table tbody');
-    tbody.innerHTML = DATA.payouts.map(p => `<tr>
-      <td><strong>${esc(p.bettor_name)}</strong></td>
-      <td>${fmt(p.amount_bet)}</td>
-      <td>${p.round_placed}</td>
-      <td>${p.multiplier}×</td>
-      <td>${fmt(p.effective_bet)}</td>
-      <td>${(p.share*100).toFixed(1)}%</td>
-      <td><strong style="color:#4ade80">${fmt(p.payout)}</strong></td>
-    </tr>`).join('');
+// Stable color per competitor (ordered by current effective bet, desc)
+const PALETTE = ['#f4a261','#e63946','#38bdf8','#a78bfa','#4ade80','#fbbf24','#fb7185','#34d399','#c084fc','#facc15'];
+let COLOR_MAP = {};
+function buildColorMap() {
+  const odds = (DATA.odds || []).slice().sort((a,b) => b.effective_bet - a.effective_bet);
+  COLOR_MAP = {};
+  odds.forEach((o, i) => { COLOR_MAP[o.name] = PALETTE[i % PALETTE.length]; });
+}
+function colorFor(name) { return COLOR_MAP[name] || '#8a8aa0'; }
+
+function renderMarketShare() {
+  const section = document.getElementById('share-section');
+  const odds = (DATA.odds || []).filter(o => o.effective_bet > 0);
+  if (!odds.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const totalEff = odds.reduce((s,o) => s + o.effective_bet, 0);
+  let sorted = odds.slice().sort((a,b) => b.effective_bet - a.effective_bet);
+
+  // Top 6 + "Others"
+  let segments = sorted.slice(0, 6).map(o => ({ name: o.name, eff: o.effective_bet, color: colorFor(o.name) }));
+  const restEff = sorted.slice(6).reduce((s,o) => s + o.effective_bet, 0);
+  if (restEff > 0) segments.push({ name: 'Others', eff: restEff, color: '#5a5a72' });
+
+  const cx = 100, cy = 100, r = 70, sw = 26;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  const ring = segments.map(s => {
+    const frac = s.eff / totalEff;
+    const len = frac * circ;
+    const c = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}"
+      stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"
+      transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"/>`;
+    offset += len;
+    return c;
+  }).join('');
+
+  const leader = segments[0];
+  const leaderPct = (leader.eff / totalEff * 100);
+  document.getElementById('donut-svg').innerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${sw}"/>
+    ${ring}
+    <text x="${cx}" y="${cy-4}" text-anchor="middle" class="donut-center-big">${leaderPct.toFixed(0)}%</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" class="donut-center-sm">${esc(leader.name.toUpperCase().slice(0,10))}</text>`;
+
+  document.getElementById('donut-legend').innerHTML = segments.map(s => `
+    <div class="dleg-row">
+      <div class="dleg-dot" style="background:${s.color}"></div>
+      <div class="dleg-name">${esc(s.name)}</div>
+      <div class="dleg-pct">${(s.eff/totalEff*100).toFixed(1)}%</div>
+    </div>`).join('');
+}
+
+function buildOddsHistory() {
+  const maxRound = DATA.tournament.current_round;
+  if (!BETS || !BETS.length || maxRound < 1) return null;
+  const roundsWithBets = [...new Set(BETS.map(b => b.round_placed))];
+  if (roundsWithBets.length < 2) return null; // need movement to be interesting
+
+  const comps = [...new Set(BETS.map(b => b.competitor_name))];
+  const series = {};
+  comps.forEach(n => series[n] = []);
+  for (let r = 1; r <= maxRound; r++) {
+    const cum = {}; let total = 0;
+    BETS.filter(b => b.round_placed <= r).forEach(b => {
+      cum[b.competitor_name] = (cum[b.competitor_name] || 0) + b.effective_bet;
+      total += b.effective_bet;
+    });
+    comps.forEach(n => {
+      series[n].push({ round: r, share: total > 0 ? (cum[n]||0)/total*100 : 0 });
+    });
   }
+  return { series, maxRound, comps };
+}
+
+function renderMarketMovement() {
+  const section = document.getElementById('movement-section');
+  const hist = buildOddsHistory();
+  if (!hist) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  // Top competitors by final share
+  const elimSet = {};
+  (DATA.odds || []).forEach(o => { elimSet[o.name] = o.eliminated; });
+  const ranked = hist.comps
+    .map(n => ({ name: n, last: hist.series[n][hist.series[n].length-1].share }))
+    .sort((a,b) => b.last - a.last);
+  const shown = ranked.slice(0, 6).map(x => x.name);
+
+  // Chart geometry (viewBox units)
+  const W = 480, H = 240, padL = 30, padR = 12, padT = 12, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const maxRound = hist.maxRound;
+
+  // y max — nice round number
+  let peak = 0;
+  shown.forEach(n => hist.series[n].forEach(p => { if (p.share > peak) peak = p.share; }));
+  let yMax = Math.min(100, Math.max(20, Math.ceil(peak / 10) * 10));
+
+  const xAt = r => maxRound === 1 ? padL + plotW/2 : padL + (r-1)/(maxRound-1) * plotW;
+  const yAt = s => padT + (1 - s/yMax) * plotH;
+
+  // Gridlines (0, mid, max)
+  const gridVals = [0, yMax/2, yMax];
+  const grid = gridVals.map(v => {
+    const y = yAt(v);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>
+      <text x="${padL-5}" y="${(y+3).toFixed(1)}" text-anchor="end" fill="var(--muted)" font-size="11">${v.toFixed(0)}%</text>`;
+  }).join('');
+
+  // X labels (round numbers)
+  let xLabels = '';
+  for (let r = 1; r <= maxRound; r++) {
+    xLabels += `<text x="${xAt(r).toFixed(1)}" y="${H-8}" text-anchor="middle" fill="var(--muted)" font-size="11">R${r}</text>`;
+  }
+
+  // Lines
+  const lines = shown.map(n => {
+    const color = colorFor(n);
+    const faded = elimSet[n];
+    const pts = hist.series[n].map(p => `${xAt(p.round).toFixed(1)},${yAt(p.share).toFixed(1)}`).join(' ');
+    const last = hist.series[n][hist.series[n].length-1];
+    const lx = xAt(last.round), ly = yAt(last.share);
+    return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${faded?2:2.5}"
+        stroke-linejoin="round" stroke-linecap="round" opacity="${faded?0.4:1}" ${faded?'stroke-dasharray="5 4"':''}/>
+      <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="3.5" fill="${color}" opacity="${faded?0.4:1}"/>`;
+  }).join('');
+
+  document.getElementById('movement-chart').innerHTML =
+    `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${grid}${lines}${xLabels}</svg>`;
+
+  document.getElementById('movement-legend').innerHTML = shown.map(n => {
+    const last = hist.series[n][hist.series[n].length-1].share;
+    return `<div class="lleg-item${elimSet[n]?' faded':''}">
+      <div class="lleg-dot" style="background:${colorFor(n)}"></div>
+      <span class="lleg-name">${esc(n)}</span>
+      <span class="lleg-pct">${last.toFixed(0)}%${elimSet[n]?' · out':''}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderStandings() {
-  document.getElementById('standings-section').style.display = 'block';
   const odds = DATA.odds || [];
-  const totalPool = DATA.pool.total_pool || 0;
   const totalEff = DATA.pool.total_effective || 0;
   const winnerName = DATA.tournament.winner ? DATA.tournament.winner.name : null;
-
   const maxEff = Math.max(...odds.map(o => o.effective_bet), 1);
 
-  function makeCard(o) {
+  const active = odds.filter(o => !o.eliminated).sort((a,b) => b.effective_bet - a.effective_bet);
+  const elim = odds.filter(o => o.eliminated);
+
+  function makeRow(o, idx, isActive) {
     const isWinner = winnerName && o.name === winnerName;
-    const cls = isWinner ? 'comp-card winner' : (o.eliminated ? 'comp-card eliminated' : 'comp-card');
+    const isLeader = isActive && idx === 0 && o.effective_bet > 0 && !winnerName;
+    const cls = isWinner ? 'comp-row winner' : (o.eliminated ? 'comp-row eliminated' : (isLeader ? 'comp-row leader' : 'comp-row'));
     const pct = totalEff > 0 ? (o.effective_bet / totalEff * 100) : 0;
     const barW = totalEff > 0 ? (o.effective_bet / maxEff * 100) : 0;
-
-    // Projected payout: if this person wins, their bettors collectively get the whole pool.
-    // Show the pool as context; per-bettor breakdown is in the simulator below.
     const betCount = BETS ? BETS.filter(b => b.competitor_name === o.name).length : 0;
-
+    const oddsMult = pct > 0 ? (100/pct).toFixed(1)+'×' : '—';
     return `<div class="${cls}">
-      <div class="comp-top">
+      <div class="comp-head">
+        <div class="rank-num">${isWinner ? '🏆' : (isActive ? '#'+(idx+1) : '✕')}</div>
         <div class="comp-avatar">${esc(initials(o.name))}</div>
-        <div style="flex:1">
-          <div class="comp-name">${esc(o.name)}${isWinner ? ' 🏆' : ''}</div>
-          <div class="comp-status">${o.eliminated ? 'Eliminated' : `${betCount} bet${betCount!==1?'s':''} · ${fmt(o.effective_bet)} eff.`}</div>
-        </div>
-        <div>
-          <div class="comp-payout">${pct.toFixed(1)}%</div>
-          <div class="comp-payout-label">of bets</div>
-        </div>
+        <div class="comp-name">${esc(o.name)}${isLeader ? '<span class="frontrunner-tag">FRONTRUNNER</span>' : ''}</div>
+        <div class="comp-odds"><div class="pct">${pct.toFixed(1)}%</div><div class="mult">${oddsMult} return</div></div>
       </div>
-      <div class="odds-bar-wrap">
-        <div class="odds-bar-bg"><div class="odds-bar-fill" style="width:${barW}%"></div></div>
-        <div class="odds-pct">${pct > 0 ? (100/pct).toFixed(1)+'×' : '—'}</div>
-      </div>
+      <div class="comp-track"><div class="comp-fill" style="width:${barW}%"></div></div>
+      <div class="comp-sub">${o.eliminated ? 'Eliminated' : `${betCount} bet${betCount!==1?'s':''} · ${fmt(o.effective_bet)} effective`}</div>
     </div>`;
   }
 
-  const active = odds.filter(o => !o.eliminated).sort((a,b) => b.effective_bet - a.effective_bet);
-  const elim   = odds.filter(o => o.eliminated);
-
-  document.getElementById('active-list').innerHTML = active.map(makeCard).join('') || '<p style="color:var(--muted)">No active competitors.</p>';
-  document.getElementById('elim-list').innerHTML = elim.map(makeCard).join('');
+  document.getElementById('active-list').innerHTML =
+    active.map((o,i) => makeRow(o,i,true)).join('') || '<p style="color:var(--muted)">No active competitors.</p>';
+  document.getElementById('elim-list').innerHTML = elim.map((o,i) => makeRow(o,i,false)).join('');
   document.getElementById('toggle-elim-btn').style.display = elim.length ? 'block' : 'none';
 }
 
@@ -412,51 +727,41 @@ function renderDropdowns() {
   const odds = DATA.odds || [];
   const bets = BETS || [];
 
-  // Sim dropdown — all competitors (winner/active most useful but include all)
   const simSel = document.getElementById('sim-select');
-  const prevSimVal = simSel.value;
-  simSel.innerHTML = '<option value="">— Choose a competitor —</option>';
+  const prevSim = simSel.value;
+  simSel.innerHTML = '<option value="">— If this competitor wins… —</option>';
   odds.forEach(o => {
     const opt = document.createElement('option');
     opt.value = o.name;
-    opt.textContent = o.name + (o.eliminated ? ' (out)' : o.name === (DATA.tournament.winner && DATA.tournament.winner.name) ? ' 🏆' : '');
+    const wn = DATA.tournament.winner && DATA.tournament.winner.name;
+    opt.textContent = o.name + (o.eliminated ? ' (out)' : o.name === wn ? ' 🏆' : '');
     simSel.appendChild(opt);
   });
-  if (prevSimVal) { simSel.value = prevSimVal; renderSim(); }
+  if (prevSim) { simSel.value = prevSim; renderSim(); }
   document.getElementById('sim-section').style.display = 'block';
 
-  // Bettor dropdown — unique bettor names from bets
   const bettorSel = document.getElementById('bettor-select');
-  const prevBettorVal = bettorSel.value;
+  const prevBettor = bettorSel.value;
   const bettors = [...new Set(bets.map(b => b.bettor_name))].sort();
-  bettorSel.innerHTML = '<option value="">— Choose a bettor —</option>';
+  bettorSel.innerHTML = '<option value="">— Choose a bettor… —</option>';
   bettors.forEach(name => {
     const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
+    opt.value = name; opt.textContent = name;
     bettorSel.appendChild(opt);
   });
-  if (prevBettorVal) { bettorSel.value = prevBettorVal; renderBettor(); }
+  if (prevBettor) { bettorSel.value = prevBettor; renderBettor(); }
   document.getElementById('bettor-section').style.display = bettors.length ? 'block' : 'none';
 }
 
 function renderSim() {
   const compName = document.getElementById('sim-select').value;
   const panel = document.getElementById('sim-panel');
-  if (!compName || !BETS) {
-    panel.innerHTML = '<div class="panel-empty">Select a competitor to see who profits.</div>';
-    return;
-  }
+  if (!compName || !BETS) { panel.innerHTML = '<div class="panel-empty">Pick a competitor to see who cashes in.</div>'; return; }
 
   const totalPool = DATA.pool.total_pool || 0;
   const compBets = BETS.filter(b => b.competitor_name === compName);
+  if (!compBets.length) { panel.innerHTML = '<div class="panel-empty">No bets on this competitor yet.</div>'; return; }
 
-  if (!compBets.length) {
-    panel.innerHTML = '<div class="panel-empty">No bets on this competitor yet.</div>';
-    return;
-  }
-
-  // Group by bettor, summing effective bets
   const byBettor = {};
   compBets.forEach(b => {
     if (!byBettor[b.bettor_name]) byBettor[b.bettor_name] = { name: b.bettor_name, effective: 0, invested: 0, bets: [] };
@@ -465,26 +770,23 @@ function renderSim() {
     byBettor[b.bettor_name].bets.push(b);
   });
 
-  const totalEff = Object.values(byBettor).reduce((s, b) => s + b.effective, 0);
+  const totalEff = Object.values(byBettor).reduce((s,b) => s + b.effective, 0);
   const rows = Object.values(byBettor)
-    .map(b => ({ ...b, share: b.effective / totalEff, payout: (b.effective / totalEff) * totalPool }))
-    .sort((a, b) => b.payout - a.payout);
-
+    .map(b => ({ ...b, share: b.effective/totalEff, payout: (b.effective/totalEff)*totalPool }))
+    .sort((a,b) => b.payout - a.payout);
   const maxPayout = rows[0].payout || 1;
 
   panel.innerHTML = `
-    <div style="font-size:.82rem;color:var(--muted);margin-bottom:12px">
-      If <strong style="color:var(--text)">${esc(compName)}</strong> wins, the full pool of <strong style="color:var(--accent2)">${fmt(totalPool)}</strong> is split among ${rows.length} bettor${rows.length!==1?'s':''}:
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">
+      If <strong style="color:var(--text)">${esc(compName)}</strong> wins, the <strong style="color:var(--accent2)">${fmt(totalPool)}</strong> pool splits among ${rows.length} backer${rows.length!==1?'s':''}:
     </div>
-    ${rows.map((r, i) => `
+    ${rows.map(r => `
     <div class="winner-row">
       <div class="winner-avatar">${esc(initials(r.name))}</div>
       <div style="flex:1">
         <div class="winner-name">${esc(r.name)}</div>
-        <div class="winner-sub">Invested ${fmt(r.invested)} · ${r.bets.length} bet${r.bets.length!==1?'s':''} · ${(r.share*100).toFixed(1)}% of eff. bets</div>
-        <div style="margin-top:5px;height:4px;background:var(--surface2);border-radius:2px">
-          <div style="height:4px;border-radius:2px;background:#4ade80;width:${(r.payout/maxPayout*100).toFixed(1)}%"></div>
-        </div>
+        <div class="winner-sub">${fmt(r.invested)} in · ${(r.share*100).toFixed(1)}% of backing</div>
+        <div class="winner-bar"><div class="winner-bar-fill" style="width:${(r.payout/maxPayout*100).toFixed(1)}%"></div></div>
       </div>
       <div class="winner-payout">${fmt(r.payout)}</div>
     </div>`).join('')}`;
@@ -493,28 +795,18 @@ function renderSim() {
 function renderBettor() {
   const bettorName = document.getElementById('bettor-select').value;
   const panel = document.getElementById('bettor-panel');
-  if (!bettorName || !BETS) {
-    panel.innerHTML = '<div class="panel-empty">Select a bettor to see their bets.</div>';
-    return;
-  }
+  if (!bettorName || !BETS) { panel.innerHTML = '<div class="panel-empty">Pick someone to see their bets.</div>'; return; }
 
   const totalPool = DATA.pool.total_pool || 0;
   const myBets = BETS.filter(b => b.bettor_name === bettorName);
-  if (!myBets.length) {
-    panel.innerHTML = '<div class="panel-empty">No bets found for this person.</div>';
-    return;
-  }
+  if (!myBets.length) { panel.innerHTML = '<div class="panel-empty">No bets found.</div>'; return; }
 
-  // Build competitor lookup for payout calculation
   const compEffTotals = {};
-  BETS.forEach(b => {
-    compEffTotals[b.competitor_name] = (compEffTotals[b.competitor_name] || 0) + b.effective_bet;
-  });
+  BETS.forEach(b => { compEffTotals[b.competitor_name] = (compEffTotals[b.competitor_name]||0) + b.effective_bet; });
 
-  const totalInvested = myBets.reduce((s, b) => s + b.amount, 0);
-  const totalEffective = myBets.reduce((s, b) => s + b.effective_bet, 0);
+  const totalInvested = myBets.reduce((s,b) => s + b.amount, 0);
+  const totalEffective = myBets.reduce((s,b) => s + b.effective_bet, 0);
 
-  // Group by competitor
   const byComp = {};
   myBets.forEach(b => {
     if (!byComp[b.competitor_name]) byComp[b.competitor_name] = { name: b.competitor_name, bets: [], totalEff: 0, totalAmt: 0 };
@@ -523,40 +815,20 @@ function renderBettor() {
     byComp[b.competitor_name].totalAmt += b.amount;
   });
 
-  // Check competitor statuses
   const compStatus = {};
   (DATA.odds || []).forEach(o => { compStatus[o.name] = { eliminated: o.eliminated }; });
 
-  const cards = Object.values(byComp).map(c => {
-    const isAlive = !compStatus[c.name]?.eliminated;
-    const compTotalEff = compEffTotals[c.name] || c.totalEff;
-    const projectedPayout = compTotalEff > 0 ? (c.totalEff / compTotalEff) * totalPool : 0;
-    return `<div class="bet-chip${isAlive ? '' : ' dead'}">
-      <div class="bet-chip-left">
-        <div class="bet-chip-comp">${esc(c.name)} <span class="badge ${isAlive?'badge-alive':'badge-out'}">${isAlive?'Active':'Out'}</span></div>
-        <div class="bet-chip-sub">${c.bets.length} bet${c.bets.length!==1?'s':''} · ${fmt(c.totalAmt)} invested · ${fmt(c.totalEff)} eff.</div>
-        <div class="bet-chip-sub" style="margin-top:2px">${c.bets.map(b=>`R${b.round_placed} ${fmt(b.amount)} @${b.multiplier}×`).join(' · ')}</div>
-      </div>
-      <div class="bet-chip-right">
-        <div class="bet-chip-payout${isAlive?'':' dead'}">${isAlive ? fmt(projectedPayout) : '—'}</div>
-        <div class="bet-chip-label">${isAlive ? 'if they win' : 'eliminated'}</div>
-      </div>
-    </div>`;
-  });
-
-  // Sort: alive first, then eliminated
   const alive = Object.values(byComp).filter(c => !compStatus[c.name]?.eliminated);
   const dead = Object.values(byComp).filter(c => compStatus[c.name]?.eliminated);
-  const sortedComps = [...alive, ...dead];
 
-  const cardsSorted = sortedComps.map(c => {
+  const cards = [...alive, ...dead].map(c => {
     const isAlive = !compStatus[c.name]?.eliminated;
     const compTotalEff = compEffTotals[c.name] || c.totalEff;
-    const projectedPayout = compTotalEff > 0 ? (c.totalEff / compTotalEff) * totalPool : 0;
+    const projectedPayout = compTotalEff > 0 ? (c.totalEff/compTotalEff)*totalPool : 0;
     return `<div class="bet-chip${isAlive ? '' : ' dead'}">
       <div class="bet-chip-left">
         <div class="bet-chip-comp">${esc(c.name)} <span class="badge ${isAlive?'badge-alive':'badge-out'}">${isAlive?'Active':'Out'}</span></div>
-        <div class="bet-chip-sub">${c.bets.length} bet${c.bets.length!==1?'s':''} · ${fmt(c.totalAmt)} invested · ${fmt(c.totalEff)} eff.</div>
+        <div class="bet-chip-sub">${c.bets.length} bet${c.bets.length!==1?'s':''} · ${fmt(c.totalAmt)} in · ${fmt(c.totalEff)} eff.</div>
         <div class="bet-chip-sub" style="margin-top:2px">${c.bets.map(b=>`R${b.round_placed} ${fmt(b.amount)} @${b.multiplier}×`).join(' · ')}</div>
       </div>
       <div class="bet-chip-right">
@@ -568,21 +840,21 @@ function renderBettor() {
 
   const maxProjPayout = alive.reduce((best, c) => {
     const compTotalEff = compEffTotals[c.name] || 0;
-    const proj = compTotalEff > 0 ? (c.totalEff / compTotalEff) * totalPool : 0;
+    const proj = compTotalEff > 0 ? (c.totalEff/compTotalEff)*totalPool : 0;
     return Math.max(best, proj);
   }, 0);
 
-  panel.innerHTML = cardsSorted.join('') + `
+  panel.innerHTML = cards.join('') + `
     <div class="totals-row">
-      <div class="total-box"><div class="tl">Total invested</div><div class="tv">${fmt(totalInvested)}</div></div>
-      <div class="total-box"><div class="tl">Total eff. bet</div><div class="tv">${fmt(totalEffective)}</div></div>
-      <div class="total-box"><div class="tl">Horses still in</div><div class="tv">${alive.length}</div></div>
-      <div class="total-box"><div class="tl">Best case</div><div class="tv" style="color:var(--accent2)">${maxProjPayout > 0 ? fmt(maxProjPayout) : '—'}</div></div>
+      <div class="total-box"><div class="tl">Invested</div><div class="tv">${fmt(totalInvested)}</div></div>
+      <div class="total-box"><div class="tl">Effective</div><div class="tv">${fmt(totalEffective)}</div></div>
+      <div class="total-box"><div class="tl">Still In</div><div class="tv">${alive.length}</div></div>
+      <div class="total-box"><div class="tl">Best Case</div><div class="tv" style="color:var(--accent2)">${maxProjPayout > 0 ? fmt(maxProjPayout) : '—'}</div></div>
     </div>`;
 }
 
 function renderLeaderboard() {
-  if (!BETS || !BETS.length) return;
+  if (!BETS || !BETS.length) { document.getElementById('lb-section').style.display = 'none'; return; }
 
   const byBettor = {};
   BETS.forEach(b => {
@@ -590,47 +862,80 @@ function renderLeaderboard() {
     byBettor[b.bettor_name].total += b.amount;
     byBettor[b.bettor_name].count += 1;
   });
-
-  const sorted = Object.values(byBettor).sort((a, b) => b.total - a.total);
-  const rankIcon = ['gold', 'silver', 'bronze'];
+  const sorted = Object.values(byBettor).sort((a,b) => b.total - a.total);
 
   document.getElementById('lb-section').style.display = 'block';
-  document.getElementById('lb-panel').innerHTML = sorted.map((b, i) => `
+
+  // Podium for top 3 (rendered as 2-1-3 order)
+  const top3 = sorted.slice(0, 3);
+  const podiumEl = document.getElementById('podium');
+  if (top3.length >= 2) {
+    const maxTotal = top3[0].total || 1;
+    const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : [top3[1], top3[0]];
+    const posClass = top3.length >= 3
+      ? { [top3[1].name]:'p2', [top3[0].name]:'p1', [top3[2].name]:'p3' }
+      : { [top3[1].name]:'p2', [top3[0].name]:'p1' };
+    const crown = { [top3[0].name]:'👑' };
+    const heights = { p1: 56, p2: 38, p3: 26 };
+    podiumEl.innerHTML = order.map(b => {
+      const pc = posClass[b.name];
+      return `<div class="podium-spot ${pc}">
+        <div class="podium-avatar">${crown[b.name] ? `<span class="podium-crown">${crown[b.name]}</span>` : ''}${esc(initials(b.name))}</div>
+        <div class="podium-name">${esc(b.name)}</div>
+        <div class="podium-amt">${fmtShort(b.total)}</div>
+        <div class="podium-bar" style="height:${heights[pc]}px"></div>
+      </div>`;
+    }).join('');
+    podiumEl.style.display = 'flex';
+  } else {
+    podiumEl.style.display = 'none';
+  }
+
+  // Remaining ranks 4+
+  const rest = sorted.slice(3);
+  document.getElementById('lb-panel').innerHTML = rest.map((b,i) => `
     <div class="lb-row">
-      <div class="lb-rank ${rankIcon[i] || ''}">${i+1}</div>
-      <div>
-        <div class="lb-name">${esc(b.name)}</div>
-        <div class="lb-sub">${b.count} bet${b.count!==1?'s':''}</div>
-      </div>
+      <div class="lb-rank">${i+4}</div>
+      <div style="flex:1"><div class="lb-name">${esc(b.name)}</div><div class="lb-sub">${b.count} bet${b.count!==1?'s':''}</div></div>
       <div class="lb-amount">${fmt(b.total)}</div>
     </div>`).join('');
 }
 
 function renderRoundActivity() {
-  if (!BETS || !BETS.length) return;
-
+  if (!BETS || !BETS.length) { document.getElementById('activity-section').style.display = 'none'; return; }
   const byRound = {};
-  BETS.forEach(b => {
-    byRound[b.round_placed] = (byRound[b.round_placed] || 0) + 1;
-  });
-
+  BETS.forEach(b => { byRound[b.round_placed] = (byRound[b.round_placed]||0) + 1; });
   const rounds = Object.keys(byRound).map(Number).sort((a,b) => a-b);
-  if (rounds.length < 2) return; // not interesting with only 1 round
+  if (rounds.length < 2) { document.getElementById('activity-section').style.display = 'none'; return; }
 
   const maxCount = Math.max(...Object.values(byRound));
-
   document.getElementById('activity-section').style.display = 'block';
   document.getElementById('round-bars').innerHTML = rounds.map(r => {
     const count = byRound[r];
-    const heightPct = (count / maxCount * 100).toFixed(0);
+    const hPct = (count/maxCount*100).toFixed(0);
     return `<div class="round-bar-wrap">
       <div class="round-bar-val">${count}</div>
-      <div style="flex:1;display:flex;align-items:flex-end;width:100%">
-        <div class="round-bar" style="height:${heightPct}%"></div>
-      </div>
+      <div class="round-bar" style="height:${hPct}%"></div>
       <div class="round-bar-label">R${r}</div>
     </div>`;
   }).join('');
+}
+
+function renderFinalPayouts() {
+  if (DATA.payouts && DATA.payouts.length > 0) {
+    document.getElementById('payout-section').style.display = 'block';
+    document.querySelector('#payout-table tbody').innerHTML = DATA.payouts.map(p => `<tr>
+      <td><strong>${esc(p.bettor_name)}</strong></td>
+      <td>${fmt(p.amount_bet)}</td>
+      <td>${p.round_placed}</td>
+      <td>${p.multiplier}×</td>
+      <td>${fmt(p.effective_bet)}</td>
+      <td>${(p.share*100).toFixed(1)}%</td>
+      <td class="winner-payout-cell">${fmt(p.payout)}</td>
+    </tr>`).join('');
+  } else {
+    document.getElementById('payout-section').style.display = 'none';
+  }
 }
 
 load();

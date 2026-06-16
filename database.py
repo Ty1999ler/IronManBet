@@ -63,8 +63,9 @@ def init_db():
 
 def create_tournament(name: str, formula: str, competitors: list[str], password: str) -> int:
     total = len(competitors)
-    import math
-    total_rounds = math.ceil(math.log2(total)) if total > 1 else 1
+    # One competitor is eliminated per round, so an N-player game runs N-1 rounds
+    # (e.g. 8 players = 7 rounds). This drives the linear multiplier and Round X/Y display.
+    total_rounds = (total - 1) if total > 1 else 1
     pw_hash = hashlib.sha256(password.encode()).hexdigest()
     with get_db() as conn:
         conn.execute("DELETE FROM bets")
@@ -316,3 +317,50 @@ def get_payout_breakdown(winner_id: int) -> list[dict]:
         })
     payouts.sort(key=lambda x: x["payout"], reverse=True)
     return payouts
+
+
+# --- Demo / Test mode ---
+
+def seed_test_mode():
+    """Wipe everything and build a 20-competitor token-formula tournament simulated
+    down to the final 4, with betting left OPEN so it can be demoed live."""
+    import random
+    rng = random.Random(42)  # fixed seed → reproducible demo
+
+    competitors = [
+        "Aaron", "Bella", "Carlos", "Dana", "Ethan", "Fiona", "Gabe", "Hana",
+        "Ivan", "Julia", "Kyle", "Lena", "Marco", "Nora", "Owen", "Priya",
+        "Quinn", "Rosa", "Sven", "Tina",
+    ]
+    create_tournament("Demo Tournament", "token", competitors, "TestMode")
+
+    name_to_id = {c["name"]: c["id"] for c in get_competitors()}
+    favorites = ["Bella", "Ethan", "Julia", "Marco"]   # these survive to the final 4
+    bettors = ["Tyler", "Alice", "Sam", "Jo", "Max", "Nina", "Leo", "Mia", "Omar", "Pat"]
+    amounts = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100]
+
+    # Everyone except the favorites gets eliminated, one per round (20 -> 4 = 16 rounds)
+    to_eliminate = [c for c in competitors if c not in favorites]
+    rng.shuffle(to_eliminate)
+
+    def place_round_bets(count):
+        active = [c["name"] for c in get_active_competitors()]
+        fav_active = [f for f in favorites if f in active]
+        for _ in range(count):
+            bettor = rng.choice(bettors)
+            # 60% of action flows to the favorites still in the game
+            if fav_active and rng.random() < 0.6:
+                target = rng.choice(fav_active)
+            else:
+                target = rng.choice(active)
+            place_bet(bettor, name_to_id[target], float(rng.choice(amounts)))
+
+    for elim_name in to_eliminate:
+        open_betting()
+        place_round_bets(rng.randint(3, 6))
+        close_betting()
+        eliminate_competitor(name_to_id[elim_name])
+
+    # Final 4: open betting and seed a little live action, then leave it OPEN for the demo
+    open_betting()
+    place_round_bets(4)

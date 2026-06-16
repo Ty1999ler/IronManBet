@@ -194,8 +194,19 @@ let state = null;
 
 // --- Auth ---
 async function doLogin() {
-  const pw = document.getElementById('login-pw').value.trim();
+  let pw = document.getElementById('login-pw').value.trim();
   if (!pw) return;
+
+  let isDemo = false;
+  if (pw.toLowerCase() === 'testmode') {
+    if (!confirm('Load DEMO data?\n\nThis REPLACES any existing tournament with a simulated 20-player game paused at the final 4 — great for showing people how it works.')) return;
+    msg('login-msg', 'Building the demo… one moment.', false);
+    const seed = await api('POST', '/api/organizer/testmode', {});
+    if (!seed.ok) { msg('login-msg', seed.error || 'Failed to build demo', true); return; }
+    pw = 'TestMode';
+    isDemo = true;
+  }
+
   const res = await api('GET', `/api/organizer/status?password=${encodeURIComponent(pw)}`);
   if (res.ok) {
     SESSION_PW = pw;
@@ -203,6 +214,7 @@ async function doLogin() {
     document.getElementById('app-screen').style.display = 'block';
     state = res.data;
     render();
+    if (isDemo) msg('round-msg', '✨ Demo loaded — open the Tracker (top-right) to show it off. Betting is open on the final 4.', false);
     setInterval(refresh, 5000);
   } else {
     msg('login-msg', res.error, true);
