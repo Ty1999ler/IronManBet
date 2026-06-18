@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ironman — Rules</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f13; --surface: #1a1a24; --surface2: #252535; --border: #333348;
+    --accent: #e63946; --accent2: #f4a261; --green: #2a9d8f; --purple: #a78bfa;
+    --text: #e8e8f0; --muted: #888899; --radius: 14px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.6; }
+  .header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .header h1 { font-size: 1.3rem; font-weight: 700; }
+  .header nav { margin-left: auto; display: flex; gap: 16px; }
+  .header nav a { color: var(--muted); text-decoration: none; font-size: .85rem; }
+  .header nav a:hover { color: var(--text); }
+
+  .container { max-width: 620px; margin: 0 auto; padding: 22px 16px 60px; }
+  h2 { font-size: 1.05rem; font-weight: 700; margin: 26px 0 10px; color: var(--accent2); }
+  h2:first-child { margin-top: 0; }
+  p { margin-bottom: 12px; }
+  .lead { color: var(--muted); }
+  strong { color: var(--text); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; }
+
+  .active-formula {
+    background: linear-gradient(135deg, rgba(244,162,97,0.12), rgba(230,57,70,0.06));
+    border: 1px solid rgba(244,162,97,0.35); border-radius: var(--radius);
+    padding: 16px 18px; margin-bottom: 20px;
+  }
+  .active-formula .tag { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .active-formula .name { font-size: 1.3rem; font-weight: 800; margin-top: 3px; }
+  .active-formula .desc { font-size: .88rem; color: var(--muted); margin-top: 4px; }
+
+  code, .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .formula { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: ui-monospace, monospace; font-size: .85rem; color: var(--accent2); overflow-x: auto; margin: 8px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; margin: 8px 0; }
+  th { text-align: right; padding: 7px 8px; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+  th:first-child { text-align: left; }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+  td:first-child { text-align: left; }
+  tr:last-child td { border-bottom: none; }
+
+  .specs { list-style: none; }
+  .specs li { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: .92rem; }
+  .specs li:last-child { border-bottom: none; }
+  .specs .k { color: var(--muted); }
+  .specs .v { font-weight: 600; }
+
+  .cta { display: inline-block; margin-top: 8px; padding: 12px 22px; background: var(--accent); color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:1.3rem">📖</span>
+  <h1>How It Works</h1>
+  <nav>
+    <a href="/">Bet</a>
+    <a href="/tracker">Tracker</a>
+  </nav>
+</div>
+
+<div class="container">
+
+  <p class="lead">A pool betting game for an elimination tournament. <strong>There's no house cut — 100% of the pool goes to the people who backed the winner.</strong></p>
+
+  <!-- Which formula this tournament uses -->
+  <div class="active-formula" id="active-formula" style="display:none">
+    <div class="tag">This game uses</div>
+    <div class="name" id="af-name">—</div>
+    <div class="desc" id="af-desc"></div>
+  </div>
+
+  <h2>The basics</h2>
+  <div class="card">
+    <ul class="specs">
+      <li><span class="k">Minimum bet</span><span class="v">$1</span></li>
+      <li><span class="k">Maximum bet</span><span class="v">$500 per bet</span></li>
+      <li><span class="k">Bets per person</span><span class="v">Unlimited</span></li>
+      <li><span class="k">Competitors can bet?</span><span class="v">Yes — even on themselves</span></li>
+      <li><span class="k">Pool cut</span><span class="v">None</span></li>
+    </ul>
+  </div>
+
+  <h2>How payouts work</h2>
+  <p>Everyone's money goes into one pool. When a competitor wins, <strong>the people who bet on them split the entire pool</strong>, divided by their <em>effective bet</em>.</p>
+  <div class="formula">effective bet = amount × multiplier
+your payout = (your effective bet on winner ÷ total effective bets on winner) × pool</div>
+  <p>Back the winner alone and you take everything. Several backers? You split it by effective bet.</p>
+
+  <h2>The multiplier — why timing matters</h2>
+  <p>Your bet is weighted by <strong>when</strong> you place it. Earlier bets earn a higher multiplier, because you're committing with less information. One of two formulas is chosen at setup:</p>
+
+  <h2 style="font-size:.95rem;color:var(--text)">Formula A — Linear Decay (gentle)</h2>
+  <div class="formula">multiplier = 1 + (rounds_remaining / total_rounds)</div>
+  <p>Always runs from <strong>2.0×</strong> in round 1 down to just above <strong>1.0×</strong> at the end, no matter how many players.</p>
+
+  <h2 style="font-size:.95rem;color:var(--text)">Formula B — Token (steep)</h2>
+  <div class="formula">multiplier = competitors_remaining − 1</div>
+  <p>Starts at <strong>(players − 1)×</strong> in round 1 and falls to <strong>1×</strong> at the final two. Rewards early commitment much harder.</p>
+
+  <h2>Example — 8 players</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Round</th><th>Players left</th><th>Linear</th><th>Token</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>8</td><td>2.000×</td><td>7×</td></tr>
+        <tr><td>2</td><td>7</td><td>1.857×</td><td>6×</td></tr>
+        <tr><td>3</td><td>6</td><td>1.714×</td><td>5×</td></tr>
+        <tr><td>4</td><td>5</td><td>1.571×</td><td>4×</td></tr>
+        <tr><td>5</td><td>4</td><td>1.429×</td><td>3×</td></tr>
+        <tr><td>6</td><td>3</td><td>1.286×</td><td>2×</td></tr>
+        <tr><td>7</td><td>2</td><td>1.143×</td><td>1×</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>A <strong>$20 bet in round 1</strong> is worth $40 effective under Linear, or $140 under Token. The same $20 in the final round is worth $22.86 or $20.</p>
+
+  <h2>"Odds" on the tracker</h2>
+  <p>The implied odds just reflect where the money currently sits — <span class="mono">share = a competitor's effective bets ÷ all effective bets</span>. It's the crowd's opinion, not a separate payout rule.</p>
+
+  <a class="cta" href="/">Place a bet →</a>
+</div>
+
+<script>
+fetch('/api/status').then(r => r.json()).then(d => {
+  if (!d.tournament || !d.tournament.formula) return;
+  const box = document.getElementById('active-formula');
+  const isToken = d.tournament.formula === 'token';
+  document.getElementById('af-name').textContent = isToken ? 'Token (steep)' : 'Linear Decay (gentle)';
+  document.getElementById('af-desc').textContent = isToken
+    ? 'Early bets are rewarded hard — round 1 can be worth many times a late bet.'
+    : 'Early bets get up to 2× weight, easing gently down to ~1× by the end.';
+  box.style.display = 'block';
+}).catch(() => {});
+</script>
+</body>
+</html>

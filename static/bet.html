@@ -124,6 +124,9 @@
   .err-msg { color: #f87171; font-size: .88rem; margin-top: 8px; display: none; }
 
   .custom-name-wrap { margin-top: 10px; display: none; }
+  .page-footer { text-align: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .page-footer a { color: var(--muted); text-decoration: none; font-size: .88rem; font-weight: 600; }
+  .page-footer a:hover { color: var(--accent2); }
   .remembered-hint {
     margin-top: 10px; font-size: .8rem; color: var(--muted);
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -229,6 +232,10 @@
     <div class="payout-est" id="conf-payout"></div>
     <p style="font-size:.85rem;color:var(--muted)">Payout estimate updates as more bets come in.</p>
     <button class="btn-again" onclick="resetForm()">Place another bet</button>
+  </div>
+
+  <div class="page-footer">
+    <a href="/rules">📖 How it works &amp; payout rules</a>
   </div>
 
 </div>

@@ -26,6 +26,11 @@ def tracker_page():
     return FileResponse("static/tracker.html")
 
 
+@app.get("/rules")
+def rules_page():
+    return FileResponse("static/rules.html")
+
+
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
