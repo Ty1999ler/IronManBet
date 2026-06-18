@@ -33,11 +33,10 @@ For an **N-competitor** game, one player is eliminated per round, so `total_roun
 ### Formula A — Linear Decay (gentle)
 
 ```
-rounds_remaining = total_rounds − current_round + 1
-multiplier       = 1 + (rounds_remaining / total_rounds)
+multiplier = 2 − (current_round − 1) / (total_rounds − 1)
 ```
 
-Always ranges from **2.0×** in round 1 down to just above **1.0×** in the final round, regardless of how many players there are.
+Runs from **2.0×** in round 1 down to exactly **1.0×** in the final round, regardless of how many players there are.
 
 ### Formula B — Token (steep)
 
@@ -52,14 +51,14 @@ Starts at **(N − 1)×** in round 1 and falls to **1×** at the final two. Rewa
 | Round | Players left | Linear | Token |
 |------:|-------------:|-------:|------:|
 | 1 | 8 | 2.000× | 7× |
-| 2 | 7 | 1.857× | 6× |
-| 3 | 6 | 1.714× | 5× |
-| 4 | 5 | 1.571× | 4× |
-| 5 | 4 | 1.429× | 3× |
-| 6 | 3 | 1.286× | 2× |
-| 7 | 2 | 1.143× | 1× |
+| 2 | 7 | 1.833× | 6× |
+| 3 | 6 | 1.667× | 5× |
+| 4 | 5 | 1.500× | 4× |
+| 5 | 4 | 1.333× | 3× |
+| 6 | 3 | 1.167× | 2× |
+| 7 | 2 | 1.000× | 1× |
 
-A **$20 bet in round 1** is worth `$40` effective under Linear, or `$140` under Token. The same $20 in the final round is worth `$22.86` or `$20`.
+A **$20 bet in round 1** is worth `$40` effective under Linear, or `$140` under Token. A **$20 bet in the final round is worth exactly `$20`** under either formula — no bonus once you have full information.
 
 ## "Odds" on the tracker
 

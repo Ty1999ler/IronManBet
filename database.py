@@ -199,9 +199,11 @@ def get_competitor(competitor_id: int) -> Optional[sqlite3.Row]:
 
 def compute_multiplier(formula: str, competitors_remaining: int, total_rounds: int, current_round: int) -> float:
     if formula == "linear":
-        rounds_remaining = total_rounds - current_round + 1
-        return round(1.0 + rounds_remaining / total_rounds, 4)
-    else:  # token
+        # 2.0× in round 1 down to exactly 1.0× in the final round (full information).
+        if total_rounds <= 1:
+            return 1.0
+        return round(max(1.0, 2.0 - (current_round - 1) / (total_rounds - 1)), 4)
+    else:  # token: last round has 2 left -> 1×, so a final-round bet stays at face value
         return float(max(1, competitors_remaining - 1))
 
 

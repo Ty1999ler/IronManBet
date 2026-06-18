@@ -98,8 +98,8 @@ your payout = (your effective bet on winner ÷ total effective bets on winner) �
   <p>Your bet is weighted by <strong>when</strong> you place it. Earlier bets earn a higher multiplier, because you're committing with less information. One of two formulas is chosen at setup:</p>
 
   <h2 style="font-size:.95rem;color:var(--text)">Formula A — Linear Decay (gentle)</h2>
-  <div class="formula">multiplier = 1 + (rounds_remaining / total_rounds)</div>
-  <p>Always runs from <strong>2.0×</strong> in round 1 down to just above <strong>1.0×</strong> at the end, no matter how many players.</p>
+  <div class="formula">multiplier = 2 − (current_round − 1) / (total_rounds − 1)</div>
+  <p>Runs from <strong>2.0×</strong> in round 1 down to exactly <strong>1.0×</strong> in the final round, no matter how many players.</p>
 
   <h2 style="font-size:.95rem;color:var(--text)">Formula B — Token (steep)</h2>
   <div class="formula">multiplier = competitors_remaining − 1</div>
@@ -111,16 +111,16 @@ your payout = (your effective bet on winner ÷ total effective bets on winner) �
       <thead><tr><th>Round</th><th>Players left</th><th>Linear</th><th>Token</th></tr></thead>
       <tbody>
         <tr><td>1</td><td>8</td><td>2.000×</td><td>7×</td></tr>
-        <tr><td>2</td><td>7</td><td>1.857×</td><td>6×</td></tr>
-        <tr><td>3</td><td>6</td><td>1.714×</td><td>5×</td></tr>
-        <tr><td>4</td><td>5</td><td>1.571×</td><td>4×</td></tr>
-        <tr><td>5</td><td>4</td><td>1.429×</td><td>3×</td></tr>
-        <tr><td>6</td><td>3</td><td>1.286×</td><td>2×</td></tr>
-        <tr><td>7</td><td>2</td><td>1.143×</td><td>1×</td></tr>
+        <tr><td>2</td><td>7</td><td>1.833×</td><td>6×</td></tr>
+        <tr><td>3</td><td>6</td><td>1.667×</td><td>5×</td></tr>
+        <tr><td>4</td><td>5</td><td>1.500×</td><td>4×</td></tr>
+        <tr><td>5</td><td>4</td><td>1.333×</td><td>3×</td></tr>
+        <tr><td>6</td><td>3</td><td>1.167×</td><td>2×</td></tr>
+        <tr><td>7</td><td>2</td><td>1.000×</td><td>1×</td></tr>
       </tbody>
     </table>
   </div>
-  <p>A <strong>$20 bet in round 1</strong> is worth $40 effective under Linear, or $140 under Token. The same $20 in the final round is worth $22.86 or $20.</p>
+  <p>A <strong>$20 bet in round 1</strong> is worth $40 effective under Linear, or $140 under Token. A <strong>$20 bet in the final round is worth exactly $20</strong> under either formula — no bonus once you have full information.</p>
 
   <h2>"Odds" on the tracker</h2>
   <p>The implied odds just reflect where the money currently sits — <span class="mono">share = a competitor's effective bets ÷ all effective bets</span>. It's the crowd's opinion, not a separate payout rule.</p>
@@ -136,7 +136,7 @@ fetch('/api/status').then(r => r.json()).then(d => {
   document.getElementById('af-name').textContent = isToken ? 'Token (steep)' : 'Linear Decay (gentle)';
   document.getElementById('af-desc').textContent = isToken
     ? 'Early bets are rewarded hard — round 1 can be worth many times a late bet.'
-    : 'Early bets get up to 2× weight, easing gently down to ~1× by the end.';
+    : 'Early bets get up to 2× weight, easing gently down to exactly 1× in the final round.';
   box.style.display = 'block';
 }).catch(() => {});
 </script>
