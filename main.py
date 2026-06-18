@@ -77,6 +77,18 @@ class DeclareWinnerRequest(BaseModel):
     competitor_id: int
 
 
+class SaveRequest(BaseModel):
+    password: str
+    name: str = Field(..., min_length=1, max_length=60)
+    passphrase: str = Field(..., min_length=1)
+
+
+class SaveActionRequest(BaseModel):
+    password: str
+    name: str
+    passphrase: str
+
+
 class BetRequest(BaseModel):
     bettor_name: str = Field(..., min_length=1, max_length=100)
     competitor_id: int
@@ -196,6 +208,43 @@ def get_all_bets(password: str):
         raise HTTPException(status_code=401, detail="Invalid password")
     bets = db.get_all_bets()
     return [dict(b) for b in bets]
+
+
+@app.post("/api/organizer/save")
+def save_state(body: SaveRequest):
+    if not db.verify_password(body.password):
+        raise HTTPException(status_code=401, detail="Invalid password")
+    res = db.save_snapshot(body.name, body.passphrase)
+    if not res["ok"]:
+        raise HTTPException(status_code=400, detail=res["error"])
+    return {"ok": True}
+
+
+@app.get("/api/organizer/saves")
+def list_saves(password: str):
+    if not db.verify_password(password):
+        raise HTTPException(status_code=401, detail="Invalid password")
+    return db.list_saves()
+
+
+@app.post("/api/organizer/restore")
+def restore_state(body: SaveActionRequest):
+    if not db.verify_password(body.password):
+        raise HTTPException(status_code=401, detail="Invalid password")
+    res = db.restore_snapshot(body.name, body.passphrase)
+    if not res["ok"]:
+        raise HTTPException(status_code=400, detail=res["error"])
+    return {"ok": True}
+
+
+@app.post("/api/organizer/delete-save")
+def delete_save(body: SaveActionRequest):
+    if not db.verify_password(body.password):
+        raise HTTPException(status_code=401, detail="Invalid password")
+    res = db.delete_save(body.name, body.passphrase)
+    if not res["ok"]:
+        raise HTTPException(status_code=400, detail=res["error"])
+    return {"ok": True}
 
 
 @app.get("/api/organizer/status")

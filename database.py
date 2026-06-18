@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 import hashlib
 from contextlib import contextmanager
@@ -58,6 +59,16 @@ def init_db():
                 effective_bet REAL NOT NULL,
                 placed_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
+
+            -- Saved snapshots. Deliberately NOT wiped by create_tournament/TestMode,
+            -- so saved games survive a reset.
+            CREATE TABLE IF NOT EXISTS saves (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                passphrase_hash TEXT NOT NULL,
+                snapshot TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
         """)
 
 
@@ -70,9 +81,10 @@ def create_tournament(name: str, formula: str, competitors: list[str], password:
     total_rounds = (total - 1) if total > 1 else 1
     pw_hash = hashlib.sha256(password.encode()).hexdigest()
     with get_db() as conn:
+        # Delete tournament before competitors — tournament.winner_id references competitors
         conn.execute("DELETE FROM bets")
-        conn.execute("DELETE FROM competitors")
         conn.execute("DELETE FROM tournament")
+        conn.execute("DELETE FROM competitors")
         conn.execute(
             """INSERT INTO tournament (id, name, formula, total_competitors, total_rounds,
                current_round, betting_open, organizer_password_hash)
@@ -366,3 +378,122 @@ def seed_test_mode():
     # Final 4: open betting and seed a little live action, then leave it OPEN for the demo
     open_betting()
     place_round_bets(4)
+
+
+# --- Save / restore snapshots ---
+
+def _insert_dict(conn, table, row: dict):
+    cols = list(row.keys())
+    collist = ", ".join(cols)
+    placeholders = ", ".join("?" for _ in cols)
+    conn.execute(
+        f"INSERT INTO {table} ({collist}) VALUES ({placeholders})",
+        [row[c] for c in cols],
+    )
+
+
+def _gather_snapshot(conn) -> dict:
+    t = conn.execute("SELECT * FROM tournament WHERE id = 1").fetchone()
+    comps = conn.execute("SELECT * FROM competitors").fetchall()
+    bets = conn.execute("SELECT * FROM bets").fetchall()
+    return {
+        "tournament": dict(t) if t else None,
+        "competitors": [dict(c) for c in comps],
+        "bets": [dict(b) for b in bets],
+    }
+
+
+def save_snapshot(name: str, passphrase: str) -> dict:
+    name = (name or "").strip()
+    if not name:
+        return {"ok": False, "error": "Give the save a name"}
+    if not passphrase:
+        return {"ok": False, "error": "Set a passphrase"}
+    ph = hashlib.sha256(passphrase.encode()).hexdigest()
+    with get_db() as conn:
+        t = conn.execute("SELECT * FROM tournament WHERE id = 1").fetchone()
+        if not t:
+            return {"ok": False, "error": "No tournament to save"}
+        existing = conn.execute("SELECT * FROM saves WHERE name = ?", (name,)).fetchone()
+        if existing and existing["passphrase_hash"] != ph:
+            return {"ok": False, "error": "That name exists — use its passphrase to overwrite, or pick another name"}
+        blob = json.dumps(_gather_snapshot(conn))
+        if existing:
+            conn.execute(
+                "UPDATE saves SET passphrase_hash = ?, snapshot = ?, created_at = datetime('now') WHERE name = ?",
+                (ph, blob, name),
+            )
+        else:
+            conn.execute(
+                "INSERT INTO saves (name, passphrase_hash, snapshot) VALUES (?, ?, ?)",
+                (name, ph, blob),
+            )
+    return {"ok": True}
+
+
+def list_saves() -> list[dict]:
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT name, created_at, snapshot FROM saves ORDER BY created_at DESC"
+        ).fetchall()
+    out = []
+    for r in rows:
+        summary = {}
+        try:
+            snap = json.loads(r["snapshot"])
+            t = snap.get("tournament") or {}
+            summary = {
+                "tournament_name": t.get("name"),
+                "round": t.get("current_round"),
+                "total_rounds": t.get("total_rounds"),
+                "num_competitors": len(snap.get("competitors", [])),
+                "num_bets": len(snap.get("bets", [])),
+            }
+        except Exception:
+            pass
+        out.append({"name": r["name"], "created_at": r["created_at"], **summary})
+    return out
+
+
+def restore_snapshot(name: str, passphrase: str) -> dict:
+    ph = hashlib.sha256((passphrase or "").encode()).hexdigest()
+    with get_db() as conn:
+        row = conn.execute("SELECT * FROM saves WHERE name = ?", (name,)).fetchone()
+        if not row:
+            return {"ok": False, "error": "No save with that name"}
+        if row["passphrase_hash"] != ph:
+            return {"ok": False, "error": "Wrong passphrase"}
+        snap = json.loads(row["snapshot"])
+
+        # Keep the CURRENT organizer password so whoever is logged in stays logged in
+        cur = conn.execute("SELECT organizer_password_hash FROM tournament WHERE id = 1").fetchone()
+        keep_pw = cur["organizer_password_hash"] if cur else None
+
+        # Wipe (tournament before competitors — FK on winner_id)
+        conn.execute("DELETE FROM bets")
+        conn.execute("DELETE FROM tournament")
+        conn.execute("DELETE FROM competitors")
+
+        # Restore (competitors before tournament before bets — FK order)
+        for c in snap.get("competitors", []):
+            _insert_dict(conn, "competitors", c)
+        t = snap.get("tournament")
+        if t:
+            if keep_pw:
+                t = {**t, "organizer_password_hash": keep_pw}
+            _insert_dict(conn, "tournament", t)
+        for b in snap.get("bets", []):
+            _insert_dict(conn, "bets", b)
+    return {"ok": True}
+
+
+def delete_save(name: str, passphrase: str) -> dict:
+    ph = hashlib.sha256((passphrase or "").encode()).hexdigest()
+    with get_db() as conn:
+        row = conn.execute("SELECT * FROM saves WHERE name = ?", (name,)).fetchone()
+        if not row:
+            return {"ok": False, "error": "No save with that name"}
+        if row["passphrase_hash"] != ph:
+            return {"ok": False, "error": "Wrong passphrase"}
+        conn.execute("DELETE FROM saves WHERE name = ?", (name,))
+    return {"ok": True}

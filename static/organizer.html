@@ -140,6 +140,7 @@
     <div class="tab active" onclick="switchTab('round')">Round Control</div>
     <div class="tab" onclick="switchTab('bets')">All Bets</div>
     <div class="tab" onclick="switchTab('odds')">Odds / Payouts</div>
+    <div class="tab" onclick="switchTab('backups')">Backups</div>
   </div>
 
   <!-- Round Control tab -->
@@ -183,6 +184,29 @@
     <div class="section">
       <h2>Current Odds &amp; Projected Payouts</h2>
       <div id="odds-table"><p style="color:var(--muted)">Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- Backups tab -->
+  <div class="tab-panel" id="tab-backups">
+    <div class="section">
+      <h2>Save Current Tournament</h2>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:12px">
+        Snapshots are kept separately and <strong>survive resets</strong> — creating a new tournament or running TestMode won't erase them. Lock each one with a passphrase to restore it later.
+      </p>
+      <label>Save name</label>
+      <input type="text" id="save-name" placeholder="e.g. Saturday Game" maxlength="60">
+      <label>Passphrase</label>
+      <input type="password" id="save-pass" placeholder="Passphrase to unlock this save">
+      <div style="margin-top:14px">
+        <button class="btn btn-success" onclick="doSave()">Save snapshot</button>
+      </div>
+      <div id="save-msg"></div>
+    </div>
+
+    <div class="section">
+      <h2>Saved Tournaments</h2>
+      <div id="saves-list"><p style="color:var(--muted)">Loading…</p></div>
     </div>
   </div>
 
@@ -404,12 +428,71 @@ async function refresh() {
 // --- Tabs ---
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((el, i) => {
-    const tabs = ['round', 'bets', 'odds'];
+    const tabs = ['round', 'bets', 'odds', 'backups'];
     el.classList.toggle('active', tabs[i] === name);
   });
   document.querySelectorAll('.tab-panel').forEach(el => {
     el.classList.toggle('active', el.id === 'tab-' + name);
   });
+  if (name === 'backups') loadSaves();
+}
+
+// --- Backups: save / restore / delete ---
+async function doSave() {
+  const name = document.getElementById('save-name').value.trim();
+  const pass = document.getElementById('save-pass').value;
+  if (!name || !pass) { msg('save-msg', 'Enter a name and a passphrase.', true); return; }
+  const res = await api('POST', '/api/organizer/save', { password: SESSION_PW, name, passphrase: pass });
+  if (res.ok) {
+    msg('save-msg', `Saved "${name}".`, false);
+    document.getElementById('save-name').value = '';
+    document.getElementById('save-pass').value = '';
+    loadSaves();
+  } else {
+    msg('save-msg', res.error, true);
+  }
+}
+
+async function loadSaves() {
+  const res = await api('GET', `/api/organizer/saves?password=${encodeURIComponent(SESSION_PW)}`);
+  const el = document.getElementById('saves-list');
+  if (!res.ok) { el.innerHTML = `<p style="color:var(--muted)">${esc(res.error)}</p>`; return; }
+  const saves = res.data;
+  if (!saves.length) { el.innerHTML = '<p style="color:var(--muted)">No saved tournaments yet.</p>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Name</th><th>Snapshot</th><th>Saved (UTC)</th><th></th></tr></thead>
+    <tbody>${saves.map(s => `<tr>
+      <td><strong>${esc(s.name)}</strong></td>
+      <td>${esc(s.tournament_name || '—')} · R${s.round ?? '?'}/${s.total_rounds ?? '?'} · ${s.num_competitors ?? 0} players · ${s.num_bets ?? 0} bets</td>
+      <td style="color:var(--muted);font-size:.82rem">${esc((s.created_at || '').replace('T',' '))}</td>
+      <td style="white-space:nowrap;text-align:right">
+        <button class="btn btn-warning btn-sm" onclick="doRestore('${esc(s.name)}')">Restore</button>
+        <button class="btn btn-ghost btn-sm" onclick="doDeleteSave('${esc(s.name)}')">Delete</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+async function doRestore(name) {
+  const pass = prompt(`Passphrase to restore "${name}":`);
+  if (pass === null) return;
+  if (!confirm(`Restore "${name}"?\n\nThis REPLACES the current tournament with the saved one. (Your current game is not auto-saved — save it first if you want to keep it.)`)) return;
+  const res = await api('POST', '/api/organizer/restore', { password: SESSION_PW, name, passphrase: pass });
+  if (res.ok) {
+    msg('save-msg', `Restored "${name}".`, false);
+    refresh();
+    switchTab('round');
+  } else {
+    msg('save-msg', res.error, true);
+  }
+}
+
+async function doDeleteSave(name) {
+  const pass = prompt(`Passphrase to delete "${name}":`);
+  if (pass === null) return;
+  const res = await api('POST', '/api/organizer/delete-save', { password: SESSION_PW, name, passphrase: pass });
+  if (res.ok) { msg('save-msg', `Deleted "${name}".`, false); loadSaves(); }
+  else msg('save-msg', res.error, true);
 }
 
 // --- Utilities ---
