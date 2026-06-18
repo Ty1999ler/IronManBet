@@ -6,23 +6,22 @@ services:
       - IRONMAN_DB=/data/ironman.db
     volumes:
       - ironman-data:/data
-    expose:
-      - "8000"
-
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
+    # Published only on loopback so your host's cloudflared can reach it.
+    # It is never exposed directly to the internet — the tunnel handles that.
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      - app
+      - "127.0.0.1:8000:8000"
+
+  # OPTION B — run the tunnel inside this stack instead of on the host.
+  # Uncomment, paste your tunnel token, and in the Cloudflare Zero Trust
+  # dashboard point the public hostname at  http://app:8000  (not localhost).
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   restart: unless-stopped
+  #   command: tunnel run
+  #   environment:
+  #     - TUNNEL_TOKEN=paste-your-tunnel-token-here
+  #   depends_on:
+  #     - app
 
 volumes:
   ironman-data:
-  caddy-data:
-  caddy-config:
