@@ -1,9 +1,11 @@
+import os
 import sqlite3
 import hashlib
 from contextlib import contextmanager
 from typing import Optional
 
-DB_PATH = "ironman.db"
+# Override with IRONMAN_DB (e.g. a mounted volume path in Docker) to persist data
+DB_PATH = os.environ.get("IRONMAN_DB", "ironman.db")
 
 
 @contextmanager

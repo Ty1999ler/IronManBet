@@ -1,0 +1,11 @@
+.git/
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+ironman.db
+ironman.db-wal
+ironman.db-shm
+venv/
+.venv/
+*.md

@@ -1,0 +1,5 @@
+# Replace with your real domain. Caddy will automatically obtain and renew
+# a free HTTPS certificate from Let's Encrypt for it.
+ironman.yourdomain.com {
+    reverse_proxy app:8000
+}

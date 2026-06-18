@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - IRONMAN_DB=/data/ironman.db
+    volumes:
+      - ironman-data:/data
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  ironman-data:
+  caddy-data:
+  caddy-config:
