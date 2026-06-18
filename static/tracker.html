@@ -295,8 +295,12 @@
   .lb-amount { font-size: .95rem; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
 
   /* ---------- ROUND ACTIVITY ---------- */
-  .round-bars { display: flex; gap: 8px; align-items: flex-end; height: 96px; padding-top: 6px; }
-  .round-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+  /* Bars grow to fill when there are few rounds, but never shrink below a
+     readable width — so a big tournament scrolls sideways instead of squishing. */
+  .round-bars { display: flex; gap: 8px; align-items: flex-end; height: 104px; padding: 6px 0 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .round-bars::-webkit-scrollbar { height: 6px; }
+  .round-bars::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  .round-bar-wrap { flex: 1 0 30px; min-width: 30px; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
   .round-bar {
     width: 100%; border-radius: 7px 7px 0 0; min-height: 6px;
     background: linear-gradient(180deg, var(--cyan), rgba(56,189,248,0.25));
@@ -915,17 +919,15 @@ function renderRoundActivity() {
   if (rounds.length < 2) { document.getElementById('activity-section').style.display = 'none'; return; }
 
   const maxCount = Math.max(...Object.values(byRound));
-  // With many rounds the bars get thin — only label every Nth so text never overlaps
-  const labelStep = Math.ceil(rounds.length / 9);
+  // Every bar keeps its label; the chart scrolls horizontally when there are many rounds.
   document.getElementById('activity-section').style.display = 'block';
-  document.getElementById('round-bars').innerHTML = rounds.map((r, i) => {
+  document.getElementById('round-bars').innerHTML = rounds.map(r => {
     const count = byRound[r];
     const hPct = (count/maxCount*100).toFixed(0);
-    const showLabel = i % labelStep === 0 || i === rounds.length - 1;
     return `<div class="round-bar-wrap">
-      <div class="round-bar-val">${showLabel ? count : ''}</div>
+      <div class="round-bar-val">${count}</div>
       <div class="round-bar" style="height:${hPct}%"></div>
-      <div class="round-bar-label">${showLabel ? 'R'+r : ''}</div>
+      <div class="round-bar-label">R${r}</div>
     </div>`;
   }).join('');
 }
